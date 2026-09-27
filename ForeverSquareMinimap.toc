@@ -1,0 +1,20 @@
+## Interface: 20506, 16001
+## Title: Forever Square Minimap
+## Notes: A square minimap. Hold Ctrl and drag its bottom left corner to resize it.
+## Notes-deDE: Eine eckige Minimap. Mit Strg an der unteren linken Ecke ziehen, um die Größe zu ändern.
+## Notes-esES: Un minimapa cuadrado. Mantén Ctrl y arrastra su esquina inferior izquierda para cambiar su tamaño.
+## Notes-esMX: Un minimapa cuadrado. Mantén Ctrl y arrastra su esquina inferior izquierda para cambiar su tamaño.
+## Notes-frFR: Une minicarte carrée. Maintenez Ctrl et faites glisser son coin inférieur gauche pour la redimensionner.
+## Version: 1.0.0
+## SavedVariables: ForeverSquareMinimapProfiles
+## SavedVariablesPerCharacter: ForeverSquareMinimapChar
+
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\frFR.lua
+Locale.lua
+Profiles.lua
+SquareMinimap.lua
+OptionsPanel.lua
+Options.lua
