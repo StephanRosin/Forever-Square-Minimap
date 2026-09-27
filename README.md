@@ -1,6 +1,6 @@
 # Forever Square Minimap
 
-A square minimap for WoW: Forever and TBC Classic Anniversary. Hold Ctrl and
+A square minimap for WoW: Forever. Hold Ctrl and
 drag its bottom left corner to resize it; addon icons stay on the edge.
 Flat or gold border, zone, server and local time, FPS and latency inside the
 map, profiles, and English, German, Spanish and French.

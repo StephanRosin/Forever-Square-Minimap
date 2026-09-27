@@ -6,7 +6,7 @@ A clean square minimap you resize by dragging its corner, with a flat or gold bo
 
 # Forever Square Minimap
 
-A square minimap for **WoW: Forever** and **TBC Classic Anniversary**, without the round frame, the zoom buttons and the rest of Blizzard's decoration around it. One small addon, no libraries needed. English, Deutsch, Español, Français.
+A square minimap for **WoW: Forever**, without the round frame, the zoom buttons and the rest of Blizzard's decoration around it. One small addon, no libraries needed. English, Deutsch, Español, Français.
 
 ## Resize by dragging
 - Hold **Ctrl** and drag the **bottom left corner** of the map: it grows and shrinks from 100 to 400 pixels and stays square.
@@ -42,7 +42,7 @@ A square minimap for **WoW: Forever** and **TBC Classic Anniversary**, without t
 Positive values always mean right or up. `dump` opens a copyable window with the size, anchor and parent of every minimap element, handy for bug reports. It is always in English.
 
 ## Notes
-- Made for WoW: Forever and TBC Classic Anniversary.
+- Made for WoW: Forever.
 - Languages: English, German (Deutsch), Spanish (Español, also for Latin American clients) and French (Français). The addon follows the game's language; the first option in its settings picks another one, and the change applies at once. Other game languages use English.
 - The translations were not written by native speakers: corrections are very welcome on the issue tracker.
 - Other minimap addons that reshape or move the minimap (e.g. the minimap module of Leatrix Plus) will fight over the same frames: use only one of them.
