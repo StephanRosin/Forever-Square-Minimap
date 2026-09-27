@@ -23,7 +23,9 @@ local L = ns.L
 
 local floor, max, min = math.floor, math.max, math.min
 
-local ROW = { slider = 58, check = 32, header = 34, select = 46, buttons = 34, color = 32 }
+-- Height of each row. A dropdown hangs 16 below its label and is about 32
+-- tall; the row after it needs room for its own label above it too.
+local ROW = { slider = 58, check = 32, header = 34, select = 70, buttons = 34, color = 32 }
 
 -- Every text on the page, as a function that sets it again.
 local relabelers = {}
