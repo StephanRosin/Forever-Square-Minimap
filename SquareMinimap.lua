@@ -238,10 +238,63 @@ function LayoutButtons()
     end
 end
 
+-- --------------------------------------------------------------------------
+-- Mail
+--
+-- Older clients have MiniMapMailFrame, which the column takes as it is.
+-- Forever has the modern minimap instead: the mail icon lives in
+-- MinimapCluster.IndicatorFrame, which is hidden with the cluster, and it
+-- cannot be moved out: on new mail its own code calls
+-- self:GetParent():Layout(), which the minimap does not have. So there it
+-- gets an icon of its own, with Blizzard's art and the same event, in the
+-- button column in mail's place.
+-- --------------------------------------------------------------------------
+local MAIL_ATLAS = "ui-hud-minimap-mail-up"
+local MAIL_NAME = "ForeverSquareMinimapMail"
+
+local function ShowMailTooltip(self)
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+    -- Not "fn and fn()": "and" keeps only the first of several results.
+    local senders = {}
+    if GetLatestThreeSenders then senders = { GetLatestThreeSenders() } end
+    local header = #senders >= 1 and HAVE_MAIL_FROM or HAVE_MAIL
+    if not (FormatUnreadMailTooltip and pcall(FormatUnreadMailTooltip, GameTooltip, header, senders)) then
+        GameTooltip:SetText(header or "")
+        for _, sender in ipairs(senders) do GameTooltip:AddLine(sender, 1, 1, 1) end
+    end
+    GameTooltip:Show()
+end
+
+local function CreateMailIcon()
+    if _G.MiniMapMailFrame or _G[MAIL_NAME] then return end
+    local f = CreateFrame("Frame", MAIL_NAME, Minimap)
+    f:SetSize(24, 18)
+    f.icon = f:CreateTexture(nil, "ARTWORK")
+    f.icon:SetAllPoints(f)
+    if not pcall(f.icon.SetAtlas, f.icon, MAIL_ATLAS) then
+        f.icon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
+    end
+    f:EnableMouse(true)
+    f:SetScript("OnEnter", ShowMailTooltip)
+    f:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    local function update()
+        f:SetShown(HasNewMail and HasNewMail() and true or false)
+    end
+    f:RegisterEvent("UPDATE_PENDING_MAIL")
+    f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:SetScript("OnEvent", update)
+    update()
+    -- In the column, in mail's place.
+    for i, name in ipairs(CONFIG.buttonStack) do
+        if name == "MiniMapMailFrame" then CONFIG.buttonStack[i] = MAIL_NAME end
+    end
+end
+
 local function ApplyShape()
     -- Take the map out of the cluster so the cluster's bar at the top can go.
     if Minimap.SetParent then Minimap:SetParent(UIParent) end
     Hide(MinimapCluster)
+    CreateMailIcon()
 
     Minimap:SetMaskTexture("Interface\\ChatFrame\\ChatFrameBackground")
 

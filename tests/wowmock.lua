@@ -26,6 +26,7 @@ local function newWidget(name)
     function w:GetHeight()      return self._h end
     function w:Hide()  self._shown = false; M.hidden[self._name or self] = true end
     function w:Show()  self._shown = true end
+    function w:SetShown(v) if v then self:Show() else self:Hide() end end
     function w:IsShown() return self._shown end
     function w:IsMouseOver() return false end
     function w:GetEffectiveScale() return 1 end
