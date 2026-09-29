@@ -43,8 +43,8 @@ M.Fire("PLAYER_LOGIN")
 
 section("Shape and start")
 check("GetMinimapShape", GetMinimapShape(), "SQUARE")
-check("default size", Minimap:GetWidth(), 180)
-check("size in the profile", ns.DB().size, 180)
+check("default size", Minimap:GetWidth(), 260)
+check("size in the profile", ns.DB().size, 260)
 check("border hidden", M.hidden["MinimapBorder"], true)
 check("north tag hidden", M.hidden["MinimapNorthTag"], true)
 check("zoom button hidden", M.hidden["MinimapZoomIn"], true)
@@ -55,20 +55,21 @@ section("The column holds only shown buttons")
 local function anchorY(n) local a = M.placed[n]; return a and a[3] end
 local function anchorX(n) local a = M.placed[n]; return a and a[2] end
 check("tracking placed", anchorY("MiniMapTracking"), -18)
-check("mail skipped", anchorY("MiniMapMailFrame"), nil)
+check("mail not in the column", MiniMapMailFrame._anchor[3], "TOPLEFT")
 check("battleground skipped", anchorY("MiniMapBattlefieldFrame"), nil)
 check("day/night not in the column", anchorY("GameTimeFrame"), nil)
 check("day/night hidden", M.hidden["GameTimeFrame"], true)
 check("centre line with the default shift", anchorX("MiniMapTracking"), 1.5)
 
-section("Mail appearing later is stacked in")
+section("Mail appearing later keeps its own place")
 local ticker
 for _, f in ipairs(M.frames) do
     if f:GetScript("OnUpdate") and f._events["PLAYER_LOGIN"] then ticker = f end
 end
 MiniMapMailFrame._shown = true
 for _ = 1, 2 do ticker:GetScript("OnUpdate")(ticker, 1.0) end
-check("mail now in the column", anchorY("MiniMapMailFrame"), -52.5)
+check("mail still at its own place", MiniMapMailFrame._anchor[3], "TOPLEFT")
+check("tracking unmoved", anchorY("MiniMapTracking"), -18)
 MiniMapMailFrame._shown = false
 
 section("Column shift (positive = right / up)")
@@ -99,6 +100,214 @@ for _, t in pairs(M.labelText) do texts[t] = true end
 check("zone name", texts["Gadgetzan"], true)
 check("server time", texts["21:07"], true)
 
+section("Texts on the map: defaults")
+local I = ns.Infos
+local T = I.texts
+local function a(region) return region._anchor end
+check("zone: top of the map", a(T.zone)[1] .. ">" .. a(T.zone)[3], "TOP>TOP")
+check("zone: on the map", a(T.zone)[2], Minimap)
+check("zone: at the edge", a(T.zone)[5], 0)
+check("zone: 11 pt", select(2, T.zone:GetFont()), 11)
+check("zone: Friz Quadrata", T.zone:GetFont(), "Fonts\\FRIZQT__.TTF")
+check("server time: under the zone text", a(T.server)[2], T.zone)
+check("server time: top to bottom", a(T.server)[1] .. ">" .. a(T.server)[3], "TOP>BOTTOM")
+check("server time: 1 px gap", a(T.server)[5], -1)
+check("server time: 11 pt", select(2, T.server:GetFont()), 11)
+check("local time: bottom centre", a(T["local"])[1] .. ">" .. a(T["local"])[3], "BOTTOM>BOTTOM")
+check("local time: at the edge", a(T["local"])[4] .. "," .. a(T["local"])[5], "0,0")
+check("local time: centred", T["local"]._justify, "CENTER")
+check("local time: 11 pt", select(2, T["local"]:GetFont()), 11)
+check("perf: top right", a(T.perf)[1] .. ">" .. a(T.perf)[3], "TOPRIGHT>TOPRIGHT")
+check("perf: in the corner", a(T.perf)[4] .. "," .. a(T.perf)[5], "0,0")
+check("perf: 11 pt", select(2, T.perf.fps:GetFont()), 11)
+check("coordinates shown", T.coords:IsShown(), true)
+check("coordinates: bottom left corner", a(T.coords)[1] .. ">" .. a(T.coords)[3] .. " " .. a(T.coords)[4] .. "," .. a(T.coords)[5], "BOTTOMLEFT>BOTTOMLEFT 0,0")
+check("everything shown", T.zone:IsShown() and T.server:IsShown() and T["local"]:IsShown() and T.perf:IsShown(), true)
+check("outline kept", select(3, T.zone:GetFont()), "OUTLINE")
+
+section("Texts on the map: FPS and latency")
+local fps, ms = T.perf.fps, T.perf.ms
+check("stacked: fps on top, right-aligned", a(fps)[1], "TOPRIGHT")
+check("stacked: ms below, right-aligned", a(ms)[1], "BOTTOMRIGHT")
+local h0 = T.perf:GetHeight()
+I.Set("perf", "gap", 5)
+check("gap adds to the height", T.perf:GetHeight() - h0, 5)
+I.Set("perf", "layout", "SIDE")
+check("side by side: ms right of fps", a(ms)[1] .. ">" .. a(ms)[3], "LEFT>RIGHT")
+check("side by side: the gap", a(ms)[4], 5)
+check("side by side: one line high", T.perf:GetHeight(), 11)
+check("side by side: both widths and the gap",
+    T.perf:GetWidth(), fps:GetStringWidth() + 5 + ms:GetStringWidth())
+I.Set("perf", "layout", "STACKED")
+I.Set("perf", "point", "TOPLEFT")
+check("left anchor: texts aligned left", fps._justify, "LEFT")
+I.Set("perf", "point", "TOPRIGHT")
+I.Set("perf", "gap", 0)
+
+section("Texts on the map: settings")
+I.Set("zone", "show", false)
+check("zone off: hidden", T.zone:IsShown(), false)
+I.Set("zone", "show", true)
+I.Set("local", "mapPoint", "BOTTOM")
+I.Set("local", "point", "TOP")
+I.Set("local", "y", -3)
+check("outside the map: under its bottom edge", a(T["local"])[1] .. ">" .. a(T["local"])[3] .. " " .. a(T["local"])[5],
+    "TOP>BOTTOM -3")
+check("top point: centred text", T["local"]._justify, "CENTER")
+I.Set("server", "anchor", "MAP")
+check("server time on the map instead", a(T.server)[2], Minimap)
+I.Set("zone", "size", 16)
+check("own size", select(2, T.zone:GetFont()), 16)
+I.Set("zone", "size", 0)
+check("auto: the game font's size again", select(2, T.zone:GetFont()), 12)
+I.Set("zone", "font", "Morpheus")
+check("own font", T.zone:GetFont(), "Fonts\\MORPHEUS.TTF")
+I.Set("zone", "font", "DEFAULT")
+check("default font again", T.zone:GetFont(), "Fonts\\FRIZQT__.TTF")
+-- Back to the defaults for the tests below.
+ns.DB().infos = nil
+I.Apply()
+
+section("Texts on the map: one size for all")
+check("100 % by default", I.Scale(), 100)
+I.SetScale(150)
+check("zone 11 -> 17", select(2, T.zone:GetFont()), 17)
+check("server 11 -> 17", select(2, T.server:GetFont()), 17)
+check("perf 11 -> 17", select(2, T.perf.fps:GetFont()), 17)
+I.Set("zone", "size", 20)
+check("own size scaled too", select(2, T.zone:GetFont()), 30)
+ns.DB().infoScale, ns.DB().infos = nil, nil
+I.Apply()
+check("back to 11", select(2, T.zone:GetFont()), 11)
+
+section("Texts on the map: older profiles")
+ns.DB().showPerf = false
+ns.DB().perfNudgeX = -12
+check("old switch off: perf off", I.Get("perf", "show"), false)
+check("old shift: added to X", I.Get("perf", "x"), -16)
+I.Set("perf", "x", -8)
+check("a new value wins", I.Get("perf", "x"), -8)
+ns.DB().showPerf, ns.DB().perfNudgeX, ns.DB().infos = nil, nil, nil
+I.Apply()
+
+section("Minimap button")
+local B = ns.MinimapButton
+local button = M.byName["ForeverSquareMinimapButton"]
+local function buttonAt() local a = button._anchor; return a[4], a[5] end
+check("created", button ~= nil, true)
+check("on the map", button._anchor[2], Minimap)
+check("shown by default", button:IsShown(), true)
+check("game icon, no own art", B.button.icon ~= nil, true)
+-- 260 px map: half 130, 5 px outside; angle 308 lies on the bottom edge.
+local bx, by = buttonAt()
+check("default: bottom edge", close(by, -135), true)
+check("default: right of the middle", bx > 0 and bx < 135, true)
+B.Set("angle", 90)
+bx, by = buttonAt()
+check("90 degrees: top edge", close(by, 135), true)
+check("90 degrees: centred", math.abs(bx) < 1e-6, true)
+check("angle in the profile", ns.DB().buttonAngle, 90)
+-- Dragging: follows the cursor around the map's centre (1770/670).
+M.state.cursor = { 1770 + 50, 670 }
+button:GetScript("OnDragStart")(button)
+button:GetScript("OnUpdate")(button, 0.1)
+bx, by = buttonAt()
+check("dragged to the right edge", close(bx, 135) and math.abs(by) < 1e-6, true)
+button:GetScript("OnDragStop")(button)
+check("angle stored on release", ns.DB().buttonAngle, 0)
+check("no longer following", button:GetScript("OnUpdate"), nil)
+-- Click opens the options page.
+local opened
+local oldSettings, oldCategory = Settings, ns.optionsCategory
+Settings = { OpenToCategory = function(id) opened = id end }
+ns.optionsCategory = { GetID = function() return 42 end }
+button:GetScript("OnClick")(button)
+check("click opens the options", opened, 42)
+Settings, ns.optionsCategory = oldSettings, oldCategory
+B.Set("show", false)
+check("can be switched off", button:IsShown(), false)
+check("switch in the profile", ns.DB().buttonShow, false)
+ns.DB().buttonShow, ns.DB().buttonAngle = nil, nil
+ns.api.ApplyLook()
+check("profile change: shown again", button:IsShown(), true)
+bx = buttonAt()
+check("profile change: default place", bx > 0 and bx < 135, true)
+for _, loc in ipairs({ "enUS", "deDE", "esES", "frFR" }) do
+    for _, key in ipairs({ "OPT_BUTTON", "OPT_BUTTON_SHOW", "BUTTON_CLICK", "BUTTON_DRAG" }) do
+        check(loc .. " " .. key, type(ns.Locales[loc][key]), "string")
+    end
+end
+
+local function colAnchor(n) return _G[n]._anchor end
+
+section("Mail icon: settings")
+local Mail = ns.Mail
+local mailFrame = MiniMapMailFrame
+check("Blizzard's frame used here", Mail.Frame(), mailFrame)
+check("above the border", M.level["MiniMapMailFrame"], 3 + Mail.LEVEL_ABOVE_MAP)
+Mail.SetPreview(true)
+check("test view shows it", mailFrame:IsShown(), true)
+ns.DB().mail = nil
+Mail.Apply()
+check("default: glows", Mail.Get("anim"), "GLOW")
+local ma = colAnchor("MiniMapMailFrame")
+check("default: past the top left corner", ma[1] .. ">" .. ma[3], "TOPLEFT>TOPLEFT")
+check("default: offsets", ma[4] .. "," .. ma[5], "-13,2")
+Mail.Set("scale", 200)
+ma = colAnchor("MiniMapMailFrame")
+check("scaled", mailFrame:GetScale(), 2)
+check("free: offsets stay pixels", ma[4] .. "," .. ma[5], "-6.5,1")
+Mail.Set("show", false)
+check("off: still visible during the test", mailFrame:GetAlpha(), 1)
+Mail.SetPreview(false)
+check("test over: hidden again", mailFrame:IsShown(), false)
+check("off: invisible", mailFrame:GetAlpha(), 0)
+ns.DB().mail = nil
+Mail.Apply()
+check("defaults back", mailFrame:GetScale(), 1)
+-- The animation's frames: size, lift, glow.
+local sc, dy, gl = Mail.AnimFrame("PULSE", 0.3)
+check("pulse grows", sc > 1.1 and dy == 0 and gl == 0, true)
+sc, dy = Mail.AnimFrame("BOUNCE", 0.15)
+check("bounce lifts", sc == 1 and dy > 5, true)
+sc, dy = Mail.AnimFrame("BOUNCE", 1.5)
+check("bounce rests", dy, 0)
+sc, dy, gl = Mail.AnimFrame("GLOW", 0.35)
+check("glow lights", gl > 0.9, true)
+check("none is still", select(3, Mail.AnimFrame("NONE", 1)) == 0 and Mail.AnimFrame("NONE", 1) == 1, true)
+
+section("Opacity")
+local Fade = ns.Fade
+check("default: opaque", Fade.Target(false, false), 1)
+check("default: opaque in combat", Fade.Target(true, false), 1)
+Fade.Set("alpha", 60)
+Fade.Set("combatAlpha", 0)
+check("out of combat", Fade.Target(false, false), 0.6)
+check("in combat", Fade.Target(true, false), 0)
+check("under the mouse: full", Fade.Target(true, true), 1)
+Fade.Set("mouseover", false)
+check("mouse ignored when off", Fade.Target(true, true), 0)
+check("applied to the map", Minimap:GetAlpha(), 0.6)
+ns.DB().fade = nil
+Fade.Apply()
+check("back to opaque", Minimap:GetAlpha(), 1)
+
+section("Coordinates")
+check("text", ns.CoordsText(0.4567, 0.1234), "45.7, 12.3")
+check("no position: empty", ns.CoordsText(nil, nil), "")
+check("instance (0,0): empty", ns.CoordsText(0, 0), "")
+C_Map = { GetBestMapForUnit = function() return 1446 end,
+          GetPlayerMapPosition = function() return { GetXY = function() return 0.5, 0.25 end } end }
+I.Set("coords", "show", true)
+check("shown when on", I.texts.coords:IsShown(), true)
+check("filled", I.texts.coords._text, "50.0, 25.0")
+C_Map = { GetBestMapForUnit = function() error("no map") end }
+I.UpdateCoords()
+check("API error: empty, no error", I.texts.coords._text, "")
+C_Map = nil
+ns.DB().infos = nil
+I.Apply()
+
 section("Moving the whole map")
 local function mapAnchor() local a = M.placed["Minimap"]; return a and a[2], a and a[3] end
 slash("move 0 0")
@@ -116,8 +325,8 @@ local qx, qy = mapAnchor()
 check("does not add up", qx == px and qy == py, true)
 slash("reset")
 local dx, dy = mapAnchor()
-check("default: 10 px up", dy - by, 10)
-check("default: 0 horizontally", dx - bx, 0)
+check("default: 53 px up", dy - by, 53)
+check("default: 8 px right", dx - bx, 8)
 
 section("Cluster and decoration")
 check("minimap on UIParent", M.reparented["Minimap"], "UIParent")
@@ -126,7 +335,7 @@ check("backdrop hidden", M.hidden["MinimapBackdrop"], true)
 check("red X hidden", M.hidden["MinimapToggleButton"], true)
 check("world map button hidden", M.hidden["MiniMapWorldMapButton"], true)
 check("instance info on the minimap", M.placed["MiniMapInstanceDifficulty"][4], "Minimap")
-check("missing frames do not matter", Minimap:GetWidth(), 180)
+check("missing frames do not matter", Minimap:GetWidth(), 260)
 
 section("Size limits")
 slash("size 250")
@@ -136,7 +345,7 @@ check("below the minimum -> 100", Minimap:GetWidth(), 100)
 slash("size 9999")
 check("above the maximum -> 400", Minimap:GetWidth(), 400)
 slash("reset")
-check("reset -> 180", Minimap:GetWidth(), 180)
+check("reset -> 260", Minimap:GetWidth(), 260)
 local before = M.zoomCalls
 slash("size 200")
 check("zoom nudged so the map redraws", (M.zoomCalls or 0) > before, true)
@@ -180,8 +389,12 @@ end
 local borderFrame = M.byName["ForeverSquareMinimapBorder"]
 check("ring of four", #ring, 4)
 check("default: flat", borderFrame._shown, true)
-check("default: black", ring[1]._color and ring[1]._color[1], 0)
-check("default: one pixel (factor 0.8)", close(ring[1]._h, 0.8), true)
+check("default: gold, two pixels (factor 0.8)", close(ring[1]._h, 1.6), true)
+check("default: gold has the inner line", line[1]._shown, true)
+ns.DB().borderStyle, ns.DB().borderSize = "FLAT", 1
+ns.api.ApplyBorder()
+check("flat: black", ring[1]._color and ring[1]._color[1], 0)
+check("flat: one pixel (factor 0.8)", close(ring[1]._h, 0.8), true)
 check("inner line hidden when flat", line[1]._shown, false)
 ns.DB().borderSize = 3
 ns.DB().borderColor = { 1, 0, 0, 0.5 }
@@ -261,7 +474,7 @@ for _, fs in ipairs(M.fontStrings) do
 end
 check("server time shown", server ~= nil, true)
 check("local time shown", localTime ~= nil, true)
-check("local time bottom right", localTime and M.placed[localTime][1], "BOTTOMRIGHT")
+check("local time bottom centre", localTime and M.placed[localTime][1], "BOTTOM")
 _G.GetGameTime = realGGT
 
 section("FPS and latency")
@@ -318,16 +531,25 @@ check("Mexican Spanish uses esES", ns.Locale.Resolve("AUTO", "esMX"), "esES")
 check("unknown game language -> English", ns.Locale.Resolve("AUTO", "koKR"), "enUS")
 check("a choice beats the game", ns.Locale.Resolve("frFR", "deDE"), "frFR")
 
+section("Options in tabs")
+local pages = ns.optionsPages
+check("five tabs", #pages, 5)
+check("first tab shown", pages[1].frame:IsShown() and not pages[2].frame:IsShown(), true)
+ns.optionsPanel.SelectTab(5)
+check("mail tab shown", pages[5].frame:IsShown() and not pages[1].frame:IsShown(), true)
+check("remembered", ns.optionsPanel.currentTab, 5)
+ns.optionsPanel.SelectTab(1)
+
 -- The options page follows a language change at once.
 local function shown(want)
     for _, fs in ipairs(M.fontStrings) do if fs._text == want then return true end end
     for _, f in ipairs(M.frames) do if f._text == want then return true end end
     return false
 end
-check("options in English", shown("Button column"), true)
+check("options in English", shown("FPS & coordinates"), true)
 ns.Locale.Set("deDE")
 check("setting stored account wide", ForeverSquareMinimapProfiles.language, "deDE")
-check("options in German", shown("Knopfspalte"), true)
+check("options in German", shown("FPS & Koordinaten"), true)
 check("buttons too", shown("Löschen"), true)
 check("the hint too", shown(ns.Locales.deDE.OPT_HINT), true)
 M.chat = {}
@@ -337,7 +559,7 @@ ns.AskProfileName()
 check("dialogs in German", M.popups[#M.popups].text, "Name des neuen Profils:")
 ns.Locale.Set("AUTO")
 check("AUTO stores nothing", ForeverSquareMinimapProfiles.language, nil)
-check("back to the game's language", shown("Button column"), true)
+check("back to the game's language", shown("FPS & coordinates"), true)
 -- Loaded with a stored language, it applies at ADDON_LOADED.
 ForeverSquareMinimapProfiles.language = "frFR"
 ns.Locale.Apply()

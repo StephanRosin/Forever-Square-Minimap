@@ -33,6 +33,7 @@ M.Fire("PLAYER_LOGIN")
 
 local mail = M.byName["ForeverSquareMinimapMail"]
 check("own mail icon", mail ~= nil, true)
+check("above the border", M.level["ForeverSquareMinimapMail"], 3 + ns.Mail.LEVEL_ABOVE_MAP)
 check("hidden without mail", mail:IsShown(), false)
 M.newMail = true
 mail:GetScript("OnEvent")(mail, "UPDATE_PENDING_MAIL")
@@ -44,9 +45,9 @@ for _, f in ipairs(M.frames) do
 end
 ticker:GetScript("OnUpdate")(ticker, 1.0)
 local placed = M.placed["ForeverSquareMinimapMail"]
-check("placed in the column", placed ~= nil, true)
-check("on the minimap's corner", placed and placed[4], "Minimap")
-check("below tracking", placed and placed[3] < M.placed["MiniMapTracking"][3], true)
+check("placed", placed ~= nil, true)
+check("on the minimap", placed and placed[4], "Minimap")
+check("past the top left corner", mail._anchor[1] .. ">" .. mail._anchor[3], "TOPLEFT>TOPLEFT")
 
 local lines = {}
 GameTooltip.AddLine = function(_, t) lines[#lines + 1] = t end
@@ -58,6 +59,19 @@ M.newMail = false
 mail:GetScript("OnEvent")(mail, "UPDATE_PENDING_MAIL")
 check("hidden once read", mail:IsShown(), false)
 ticker:GetScript("OnUpdate")(ticker, 1.0)
+
+-- The test view from the options shows our icon without mail.
+ns.Mail.SetPreview(true)
+check("test view shows it", mail:IsShown(), true)
+ns.Mail.SetPreview(false)
+check("test view over: hidden", mail:IsShown(), false)
+M.newMail = true
+ns.Mail.SetPreview(true)
+ns.Mail.SetPreview(false)
+mail:GetScript("OnEvent")(mail, "UPDATE_PENDING_MAIL")
+check("real mail stays shown", mail:IsShown(), true)
+M.newMail = false
+mail:GetScript("OnEvent")(mail, "UPDATE_PENDING_MAIL")
 
 print(("%d passed, %d failed"):format(pass, fail))
 os.exit(fail == 0 and 0 or 1)

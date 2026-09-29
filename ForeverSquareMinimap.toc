@@ -5,7 +5,7 @@
 ## Notes-esES: Un minimapa cuadrado. Mantén Ctrl y arrastra su esquina inferior izquierda para cambiar su tamaño.
 ## Notes-esMX: Un minimapa cuadrado. Mantén Ctrl y arrastra su esquina inferior izquierda para cambiar su tamaño.
 ## Notes-frFR: Une minicarte carrée. Maintenez Ctrl et faites glisser son coin inférieur gauche pour la redimensionner.
-## Version: 1.0.1
+## Version: 1.1.0
 ## X-Curse-Project-ID: 1714152
 ## SavedVariables: ForeverSquareMinimapProfiles
 ## SavedVariablesPerCharacter: ForeverSquareMinimapChar
@@ -16,6 +16,10 @@ Locales\esES.lua
 Locales\frFR.lua
 Locale.lua
 Profiles.lua
+Infos.lua
+Mail.lua
+Fade.lua
 SquareMinimap.lua
 OptionsPanel.lua
 Options.lua
+MinimapButton.lua

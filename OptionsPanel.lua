@@ -8,6 +8,8 @@ description instead of hand built frames:
         { type = "slider", label = "OPT_SIZE", min = 100, max = 400, step = 1,
           unit = "px", get = ..., set = ... },
         { type = "check",  label = "OPT_PERF_SHOW", get = ..., set = ... },
+        { type = "tab",    label = "TAB_MAIL" },   -- starts a new tab
+        ...
     })
 
 Labels are keys into ns.L. The page keeps every text it has set, and
@@ -333,15 +335,19 @@ function ns.BuildOptions(spec)
     hint:SetPoint("TOPLEFT", 16, -38)
     labelled(function() hint:SetText(L.OPT_HINT) end)
 
+    -- Tabs: each "tab" item starts a page of its own; a row of buttons
+    -- above the scroll area switches between them. A spec without tabs is
+    -- one page, without the row.
+    local hasTabs = false
+    for _, opt in ipairs(spec) do
+        if opt.type == "tab" then hasTabs = true; break end
+    end
+
     -- Blizzard's option pages do not scroll by themselves.
     local scroll = CreateFrame("ScrollFrame", panelName .. "Scroll", panel,
                                "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 8, -56)
+    scroll:SetPoint("TOPLEFT", 8, hasTabs and -84 or -56)
     scroll:SetPoint("BOTTOMRIGHT", -30, 8)
-
-    local content = CreateFrame("Frame", panelName .. "Content", scroll)
-    content:SetSize(560, 10)
-    scroll:SetScrollChild(content)
 
     -- The template brings a scroll bar, but not always the mouse wheel.
     scroll:EnableMouseWheel(true)
@@ -354,35 +360,109 @@ function ns.BuildOptions(spec)
         if self.SetVerticalScroll then self:SetVerticalScroll(target) end
     end)
 
+    local pages, tabs = {}, {}
+    local function NewPage()
+        local content = CreateFrame("Frame", panelName .. "Content" .. (#pages + 1), scroll)
+        content:SetSize(560, 10)
+        content:Hide()
+        pages[#pages + 1] = { frame = content, y = -8 }
+        return pages[#pages]
+    end
+
+    local function SelectTab(i)
+        for j, p in ipairs(pages) do
+            p.frame:SetShown(j == i)
+            local tab = tabs[j]
+            if tab then
+                tab.line:SetShown(j == i)
+                if j == i then
+                    tab.text:SetTextColor(1, 1, 1)
+                else
+                    tab.text:SetTextColor(1, 0.82, 0)
+                end
+            end
+        end
+        scroll:SetScrollChild(pages[i].frame)
+        if scroll.SetVerticalScroll then scroll:SetVerticalScroll(0) end
+        panel.currentTab = i
+    end
+    panel.SelectTab = SelectTab
+
+    -- The row of tabs; each button as wide as its text, so it follows a
+    -- language change.
+    local function LayoutTabs()
+        local x = 16
+        for _, tab in ipairs(tabs) do
+            local w = (tab.text:GetStringWidth() or 60) + 24
+            tab:SetWidth(w)
+            tab:ClearAllPoints()
+            tab:SetPoint("TOPLEFT", panel, "TOPLEFT", x, -56)
+            x = x + w + 4
+        end
+    end
+
+    local function AddTab(opt)
+        local i = #tabs + 1
+        local tab = CreateFrame("Button", panelName .. "Tab" .. i, panel)
+        tab:SetHeight(22)
+        tab.text = tab:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        tab.text:SetPoint("CENTER", tab, "CENTER", 0, 1)
+        tab.line = tab:CreateTexture(nil, "ARTWORK")
+        tab.line:SetColorTexture(1, 0.82, 0, 1)
+        tab.line:SetHeight(2)
+        tab.line:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 6, 0)
+        tab.line:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -6, 0)
+        local hover = tab:CreateTexture(nil, "HIGHLIGHT")
+        hover:SetAllPoints(tab)
+        hover:SetColorTexture(1, 1, 1, 0.08)
+        tab:SetScript("OnClick", function() SelectTab(i) end)
+        tabs[i] = tab
+        labelled(function()
+            tab.text:SetText(text(opt.label))
+            LayoutTabs()
+        end)
+    end
+
     local refreshers = {}
-    local y = -8
+    -- Not "hasTabs and nil or NewPage()": that always makes a page.
+    local page
+    if not hasTabs then page = NewPage() end
 
     for index, opt in ipairs(spec) do
         local kind = opt.type or "slider"
-        local refresh
-        if kind == "slider" then
-            refresh = AddSlider(content, opt, y, index, panelName)
-        elseif kind == "check" then
-            refresh = AddCheck(content, opt, y, index, panelName)
-        elseif kind == "select" then
-            refresh = AddSelect(content, opt, y, index, panelName)
-        elseif kind == "buttons" then
-            refresh = AddButtons(content, opt, y, index, panelName)
-        elseif kind == "color" then
-            refresh = AddColor(content, opt, y, index, panelName)
-        elseif kind == "header" then
-            refresh = AddHeader(content, opt, y)
+        if kind == "tab" then
+            page = NewPage()
+            AddTab(opt)
+        else
+            local content, y = page.frame, page.y
+            local refresh
+            if kind == "slider" then
+                refresh = AddSlider(content, opt, y, index, panelName)
+            elseif kind == "check" then
+                refresh = AddCheck(content, opt, y, index, panelName)
+            elseif kind == "select" then
+                refresh = AddSelect(content, opt, y, index, panelName)
+            elseif kind == "buttons" then
+                refresh = AddButtons(content, opt, y, index, panelName)
+            elseif kind == "color" then
+                refresh = AddColor(content, opt, y, index, panelName)
+            elseif kind == "header" then
+                refresh = AddHeader(content, opt, y)
+            end
+            if refresh then refreshers[#refreshers + 1] = refresh end
+            page.y = y - (ROW[kind] or ROW.slider)
         end
-        if refresh then refreshers[#refreshers + 1] = refresh end
-        y = y - (ROW[kind] or ROW.slider)
     end
 
     -- The scroll frame needs the content's height to know how far it scrolls.
-    content:SetHeight(math.max(10, -y + 16))
+    for _, p in ipairs(pages) do p.frame:SetHeight(math.max(10, -p.y + 16)) end
+    SelectTab(1)
 
     local function RefreshAll()
         local w = scroll.GetWidth and scroll:GetWidth()
-        if w and w > 0 then content:SetWidth(w) end
+        if w and w > 0 then
+            for _, p in ipairs(pages) do p.frame:SetWidth(w) end
+        end
         for _, fn in ipairs(refreshers) do pcall(fn) end
     end
 
@@ -395,6 +475,6 @@ function ns.BuildOptions(spec)
     ns.optionsCategory = Register(panel)
     RefreshAll()
     ns.optionsPanel = panel
-    ns.optionsContent = content
+    ns.optionsPages = pages
     return panel
 end

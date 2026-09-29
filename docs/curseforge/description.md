@@ -1,6 +1,6 @@
 **Summary**
 
-A clean square minimap you resize by dragging its corner, with a flat or gold border. Addon icons stay on the edge, Blizzard's clutter is gone, and zone, clocks, FPS and latency sit inside the map.
+A clean square minimap you resize by dragging its corner, with a flat or gold border. Addon icons stay on the edge, Blizzard's clutter is gone, and zone, clocks, coordinates, FPS and latency can each be placed, sized and styled wherever you like.
 
 ---
 
@@ -24,20 +24,34 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 
 ## Less clutter
 - Hidden: the round border, the north tag, the zoom buttons (the **mouse wheel zooms** instead), the world map button, the close button and Blizzard's clock and zone buttons.
-- Tracking, mail and the battleground queue move into a tidy **column on the right edge**, only while they are shown, without gaps.
 
-## Everything inside the map
-- **Zone name** centred at the top, with the **server time** below it.
-- **Local time** of your computer in the bottom right corner.
-- **FPS and world latency**, coloured green, yellow or red. The display moves out of the way of the button column by itself and can be shifted in the options.
+## Texts on and around the map
+- **Zone name** at the top, with the **server time** below it.
+- **Local time** of your computer at the bottom.
+- **Coordinates** of your character in the bottom left corner.
+- **FPS and world latency**, coloured green, yellow or red, on top of each other or side by side with a gap of your choice.
+- **Every text is yours to arrange**: switch it on or off, pin any of its points to any point of the map (inside or outside, with X/Y offset), and pick its font and size. Fonts from LibSharedMedia show up too.
+- **One slider for all text sizes** makes every text bigger or smaller together.
 - All text has an outline, so it stays readable on bright map ground.
 
+## Mail icon
+- Sits just outside the map's top left corner, or anywhere you place it. Any size from 50 to 250 %.
+- **Animated** while you have unread mail: glow, pulse, bounce or none.
+- **Test view** in the options: shows the icon while the options are open, so you can place it without waiting for a letter.
+
+## Opacity
+- Separate opacity for out of combat and in combat, from fully visible down to invisible.
+- Optionally fully visible again while the mouse is over the map.
+
+## Minimap button
+- A button on the map's edge opens the options with one click. Drag it along the edge to move it, or switch it off.
+
 ## Options
-- Options window under Interface > AddOns > Forever Square Minimap: language, size, map position, border, position of the button column, FPS/latency on or off and its position. Every slider has a text field for exact values.
+- Options window under Interface > AddOns > Forever Square Minimap, or one click on the minimap button, in five tabs: General (language, minimap button, opacity, profiles), Map (size, position, border), Texts, FPS & coordinates, Mail. Every slider has a text field for exact values.
 - **Profiles**: save your layout under a name and switch between profiles per character. Your language stays when you switch.
 
 ## Commands
-`/squareminimap` or `/fsm` (status), `/fsm size <100-400>`, `/fsm move <x> <y>`, `/fsm col <x> [y]`, `/fsm reset`, `/fsm dump`
+`/squareminimap` or `/fsm` (status), `/fsm size <100-400>`, `/fsm move <x> <y>`, `/fsm reset`, `/fsm dump`
 
 Positive values always mean right or up. `dump` opens a copyable window with the size, anchor and parent of every minimap element, handy for bug reports. It is always in English.
 

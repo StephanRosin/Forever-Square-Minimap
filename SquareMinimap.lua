@@ -14,23 +14,22 @@ local L = ns.L
 local CONFIG = {
     minSize     = 100,
     maxSize     = 400,
-    defaultSize = 180,
+    defaultSize = 260,
     gripSize    = 18,
     inset       = 2,    -- gap between the button column and the right edge
     colNudge    = 20,   -- default shift of the button column to the right
     colNudgeY   = 0,
-    offsetX     = 0,    -- default shift of the whole map
-    offsetY     = 10,   -- positive = up
+    offsetX     = 8,    -- default shift of the whole map
+    offsetY     = 53,   -- positive = up
     btnSpacing  = 2,    -- gap between the stacked buttons
-    showPerf    = true, -- FPS and latency in the top right of the map
-    perfNudgeX  = 0,    -- fine shift of that display to the left or right
-    borderStyle = "FLAT",           -- NONE, FLAT or GOLD
-    borderSize  = 1,                -- in screen pixels
+    borderStyle = "GOLD",           -- NONE, FLAT or GOLD
+    borderSize  = 2,                -- in screen pixels
     borderColor = { 0, 0, 0, 1 },   -- FLAT only
     borderMaxSize = 8,
 
     -- Blizzard's buttons go into a column on the right edge, top to bottom, so
-    -- the layout is the same at every size and nothing overlaps.
+    -- the layout is the same at every size and nothing overlaps. Only older
+    -- clients have them; WoW: Forever has none of them on the map.
     buttonStack = {
         "MiniMapTracking",
         "MiniMapMailFrame",
@@ -180,11 +179,6 @@ local function VisibleSignature()
     return table.concat(parts)
 end
 
--- Declared BEFORE LayoutButtons, which places labelPerf: a local declared
--- later would be a global (nil) inside it, and the display would never get
--- an anchor.
-local labelZone, labelTime, labelLocal, labelPerf
-
 function LayoutButtons()
     LayoutExtras()
 
@@ -192,17 +186,24 @@ function LayoutButtons()
     -- centres would not line up, so all of them are centred on the widest.
     -- Every button is moved onto the minimap, hidden ones too: otherwise mail,
     -- for example, would stay a child of the hidden MinimapBackdrop and be
-    -- invisible as soon as Blizzard shows it.
+    -- invisible as soon as Blizzard shows it. Mail is placed by Mail.lua,
+    -- not in the column.
     local colWidth = 0
+    local members = {}
     for _, name in ipairs(CONFIG.buttonStack) do
         local f = _G[name]
         if f then
+            local isMail = ns.Mail.IsMailFrame(f)
             if f.SetParent then
                 f:SetParent(Minimap)
-                RaiseAbove(f)
+                -- Mail sets its own level (Mail.lua).
+                if not isMail then RaiseAbove(f) end
             end
-            local w = f.GetWidth and f:GetWidth()
-            if w and w > colWidth then colWidth = w end
+            if not isMail then
+                members[#members + 1] = f
+                local w = f.GetWidth and f:GetWidth()
+                if w and w > colWidth then colWidth = w end
+            end
         end
     end
     if colWidth <= 0 then colWidth = 32 end
@@ -212,12 +213,11 @@ function LayoutButtons()
     -- nudgeY positive = up. The column runs down from the top edge, so its
     -- start moves up (less negative).
     local y = -CONFIG.inset + nudgeY
-    for _, name in ipairs(CONFIG.buttonStack) do
-        local frame = _G[name]
-        -- Only shown buttons take room. Mail and battleground are hidden most
-        -- of the time; reserving room for them would leave a gap. When they
-        -- appear, the ticker rebuilds the column.
-        if frame and frame.SetPoint and frame.IsShown and frame:IsShown() then
+    for _, frame in ipairs(members) do
+        -- Only shown buttons take room. The battleground queue is hidden most
+        -- of the time; reserving room for it would leave a gap. When it
+        -- appears, the ticker rebuilds the column.
+        if frame.SetPoint and frame.IsShown and frame:IsShown() then
             local h = frame.GetHeight and frame:GetHeight()
             if not h or h <= 0 then h = 24 end
             frame:ClearAllPoints()
@@ -225,76 +225,13 @@ function LayoutButtons()
             y = y - h - CONFIG.btnSpacing
         end
     end
-
-    -- FPS and latency in the top right corner, anchored to the map's corner
-    -- so it sits the same at every size. Placed here rather than when it is
-    -- created, because the options slider calls LayoutButtons.
-    if labelPerf then
-        local nudge = ns.DB().perfNudgeX
-        if type(nudge) ~= "number" then nudge = CONFIG.perfNudgeX end
-        labelPerf:ClearAllPoints()
-        labelPerf:SetPoint("TOPRIGHT", Minimap, "TOPRIGHT",
-            -CONFIG.inset - 2 + nudge, -CONFIG.inset - 2)
-    end
-end
-
--- --------------------------------------------------------------------------
--- Mail
---
--- Older clients have MiniMapMailFrame, which the column takes as it is.
--- Forever has the modern minimap instead: the mail icon lives in
--- MinimapCluster.IndicatorFrame, which is hidden with the cluster, and it
--- cannot be moved out: on new mail its own code calls
--- self:GetParent():Layout(), which the minimap does not have. So there it
--- gets an icon of its own, with Blizzard's art and the same event, in the
--- button column in mail's place.
--- --------------------------------------------------------------------------
-local MAIL_ATLAS = "ui-hud-minimap-mail-up"
-local MAIL_NAME = "ForeverSquareMinimapMail"
-
-local function ShowMailTooltip(self)
-    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
-    -- Not "fn and fn()": "and" keeps only the first of several results.
-    local senders = {}
-    if GetLatestThreeSenders then senders = { GetLatestThreeSenders() } end
-    local header = #senders >= 1 and HAVE_MAIL_FROM or HAVE_MAIL
-    if not (FormatUnreadMailTooltip and pcall(FormatUnreadMailTooltip, GameTooltip, header, senders)) then
-        GameTooltip:SetText(header or "")
-        for _, sender in ipairs(senders) do GameTooltip:AddLine(sender, 1, 1, 1) end
-    end
-    GameTooltip:Show()
-end
-
-local function CreateMailIcon()
-    if _G.MiniMapMailFrame or _G[MAIL_NAME] then return end
-    local f = CreateFrame("Frame", MAIL_NAME, Minimap)
-    f:SetSize(24, 18)
-    f.icon = f:CreateTexture(nil, "ARTWORK")
-    f.icon:SetAllPoints(f)
-    if not pcall(f.icon.SetAtlas, f.icon, MAIL_ATLAS) then
-        f.icon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
-    end
-    f:EnableMouse(true)
-    f:SetScript("OnEnter", ShowMailTooltip)
-    f:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    local function update()
-        f:SetShown(HasNewMail and HasNewMail() and true or false)
-    end
-    f:RegisterEvent("UPDATE_PENDING_MAIL")
-    f:RegisterEvent("PLAYER_ENTERING_WORLD")
-    f:SetScript("OnEvent", update)
-    update()
-    -- In the column, in mail's place.
-    for i, name in ipairs(CONFIG.buttonStack) do
-        if name == "MiniMapMailFrame" then CONFIG.buttonStack[i] = MAIL_NAME end
-    end
 end
 
 local function ApplyShape()
     -- Take the map out of the cluster so the cluster's bar at the top can go.
     if Minimap.SetParent then Minimap:SetParent(UIParent) end
     Hide(MinimapCluster)
-    CreateMailIcon()
+    ns.Mail.Create()
 
     Minimap:SetMaskTexture("Interface\\ChatFrame\\ChatFrameBackground")
 
@@ -318,114 +255,15 @@ local function ApplyShape()
 end
 
 -- --------------------------------------------------------------------------
--- FPS and latency
---
--- A pure function: it gets the numbers and returns the text, so the colours
--- can be tested without a running game. Below 30 frames the game stutters
--- visibly, above 250 ms every ability feels late.
--- --------------------------------------------------------------------------
-local PERF = {
-    fpsGood = 60, fpsFair = 30,
-    pingGood = 100, pingFair = 250,
-    green = "ff40ff40", yellow = "ffffd000", red = "ffff4040",
-}
-
-local function Colour(value, good, fair, lowerIsBetter)
-    if not value then return PERF.red end
-    if lowerIsBetter then
-        if value <= good then return PERF.green end
-        if value <= fair then return PERF.yellow end
-    else
-        if value >= good then return PERF.green end
-        if value >= fair then return PERF.yellow end
-    end
-    return PERF.red
-end
-
--- fps and ping may be nil: the client reports latency only once it has
--- measured it. Until then a dash shows instead of a made-up number.
-function ns.PerfText(fps, ping)
-    local f = type(fps) == "number" and math.floor(fps + 0.5) or nil
-    local p = type(ping) == "number" and math.floor(ping + 0.5) or nil
-    local top = f and ("|c%s%d|r"):format(Colour(f, PERF.fpsGood, PERF.fpsFair, false), f)
-                  or "|c" .. PERF.red .. "--|r"
-    local bottom = p and ("|c%s%d|r"):format(Colour(p, PERF.pingGood, PERF.pingFair, true), p)
-                     or "|c" .. PERF.red .. "--|r"
-    -- Two short lines: the corner of the map is narrow.
-    return top .. " fps\n" .. bottom .. " ms"
-end
-
--- --------------------------------------------------------------------------
--- Our own labels
+-- Our own texts: zone, server time, local time, FPS and latency
 --
 -- Blizzard's zone bar and clock are buttons (the clock opened the stopwatch)
--- with frame art that does not grow. Font strings inside the map do the same
--- job, stay centred and cannot be clicked by accident.
+-- with frame art that does not grow. Font strings on the map do the same
+-- job and cannot be clicked by accident. Everything about them is in
+-- Infos.lua: what shows, where, in which font.
 -- --------------------------------------------------------------------------
-local function CreateLabels()
-    if labelZone then return end
-    -- Inside the map, not above it: the minimap sits at the top of the
-    -- screen, and anything above it would be cut off.
-    labelZone = Minimap:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    labelZone:SetPoint("TOP", Minimap, "TOP", 0, -4)
-
-    labelTime = Minimap:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    labelTime:SetPoint("TOP", labelZone, "BOTTOM", 0, -1)
-
-    -- The local time of the computer, bottom right inside the map. The server
-    -- time is at the top: in the game you need both.
-    labelLocal = Minimap:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    labelLocal:SetPoint("BOTTOMRIGHT", Minimap, "BOTTOMRIGHT", -4, 4)
-    labelLocal:SetJustifyH("RIGHT")
-
-    -- FPS and latency, top right inside the map; placed in LayoutButtons.
-    labelPerf = Minimap:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    labelPerf:SetJustifyH("RIGHT")
-
-    -- An outline keeps the text readable on bright ground.
-    for _, fs in ipairs({ labelZone, labelTime, labelLocal, labelPerf }) do
-        local font, size = fs:GetFont()
-        if font and size then fs:SetFont(font, size, "OUTLINE") end
-    end
-end
-
-local function UpdateLabels()
-    if not labelZone then return end
-
-    local zone = (GetMinimapZoneText and GetMinimapZoneText())
-              or (GetZoneText and GetZoneText()) or ""
-    labelZone:SetText(zone)
-
-    -- GetGameTime is the server time, the one Blizzard's clock showed.
-    local hour, minute
-    if GetGameTime then hour, minute = GetGameTime() end
-    if hour and minute then
-        labelTime:SetText(("%02d:%02d"):format(hour, minute))
-    else
-        labelTime:SetText(date("%H:%M"))
-    end
-
-    if labelLocal then
-        labelLocal:SetText(date("%H:%M"))
-    end
-
-    if labelPerf then
-        if ns.DB().showPerf == false then
-            labelPerf:Hide()
-        else
-            -- World latency is the one you feel while playing; home latency
-            -- is chat and guild. If only one is there, take that.
-            local fps = GetFramerate and GetFramerate() or nil
-            local home, world
-            if GetNetStats then
-                local _, _, h, w = GetNetStats()
-                home, world = h, w
-            end
-            labelPerf:SetText(ns.PerfText(fps, world or home))
-            labelPerf:Show()
-        end
-    end
-end
+local function CreateLabels() ns.Infos.Create() end
+local function UpdateLabels() ns.Infos.Update() end
 
 -- --------------------------------------------------------------------------
 -- The grip
@@ -646,7 +484,11 @@ local function ApplyLook()
     AnchorTopRight()
     ApplySize(size)
     ApplyBorder()
+    ns.Infos.Apply()
     UpdateLabels()
+    ns.MinimapButton.Place()
+    ns.Mail.Apply()
+    ns.Fade.Apply()
 end
 
 -- --------------------------------------------------------------------------
@@ -666,6 +508,8 @@ events:SetScript("OnEvent", function()
     CreateGrip()
     CreateLabels()
     UpdateLabels()
+    ns.MinimapButton.Create()
+    ns.Fade.Create()
 
     -- Icons need a moment until every addon has registered its button.
     -- LibDBIcon waits for the same reason.
@@ -885,8 +729,9 @@ ns.api = {
     ApplySize      = function(v) return ApplySize(v) end,
     AnchorTopRight = function() return AnchorTopRight() end,
     LayoutButtons  = function() return LayoutButtons() end,
-    -- The FPS/latency checkbox must act at once, not on the next tick.
+    -- Setting changes on the texts must act at once, not on the next tick.
     UpdateLabels   = function() return UpdateLabels() end,
+    ApplyInfos     = function() ns.Infos.Apply(); ns.Infos.Update() end,
     ApplyLook      = function() return ApplyLook() end,
     ApplyBorder    = function() return ApplyBorder() end,
     Config         = CONFIG,

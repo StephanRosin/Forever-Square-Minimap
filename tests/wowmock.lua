@@ -28,7 +28,11 @@ local function newWidget(name)
     function w:Show()  self._shown = true end
     function w:SetShown(v) if v then self:Show() else self:Hide() end end
     function w:IsShown() return self._shown end
-    function w:IsMouseOver() return false end
+    function w:IsMouseOver() return self._mouseOver or false end
+    function w:SetAlpha(v) self._alpha = v end
+    function w:GetAlpha() return self._alpha or 1 end
+    function w:SetScale(v) self._scale = v end
+    function w:GetScale() return self._scale or 1 end
     function w:GetEffectiveScale() return 1 end
     function w:GetFrameLevel() return 3 end
     function w:CreateTexture()
@@ -41,11 +45,28 @@ local function newWidget(name)
         function t:SetWidth(v) self._w = v end
         return t
     end
-    function w:CreateFontString()
+    -- Font strings: the template's font (GameFontNormal 12, the small one
+    -- 10), a width of 6 px per visible character, a line as high as the
+    -- font; SetPoint also keeps what it hangs from (_anchor).
+    function w:CreateFontString(_, _, template)
         local fs = newWidget()
         M.fontStrings[#M.fontStrings + 1] = fs
+        fs._font = { "Fonts\\FRIZQT__.TTF", template == "GameFontNormal" and 12 or 10, "" }
+        fs._template = template
+        fs._fontString = true
         function fs:SetText(t) self._text = t; M.labelText[self] = t end
-        function fs:SetPoint(p, rel, p2, x, y) M.placed[self] = { p, x, y } end
+        function fs:SetPoint(p, rel, p2, x, y)
+            M.placed[self] = { p, x, y }
+            self._anchor = { p, rel, p2, x, y }
+        end
+        function fs:GetFont() return self._font[1], self._font[2], self._font[3] end
+        function fs:SetFont(path, size, flags) self._font = { path, size, flags } end
+        function fs:SetJustifyH(v) self._justify = v end
+        function fs:GetStringWidth()
+            local visible = tostring(self._text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+            return #visible * 6
+        end
+        function fs:GetStringHeight() return self._font[2] end
         return fs
     end
     function w:RegisterEvent(e) self._events[e] = true end
@@ -54,6 +75,7 @@ local function newWidget(name)
     function w:GetText() return self._text end
     function w:SetPoint(p, rel, p2, x, y)
         if type(rel) == "number" then x, y, rel, p2 = rel, p2, nil, nil end
+        self._anchor = { p, rel, p2, x, y }
         M.placed[self._name or self] = { p, x, y, rel and rel.GetName and rel:GetName() }
         local key = self._name or self
         M.anchors[key] = M.anchors[key] or {}
@@ -81,7 +103,9 @@ M.build = { "2.5.6", "69110", "Aug 12 2026", 20506 }
 function GetBuildInfo() return M.build[1], M.build[2], M.build[3], M.build[4] end
 function M.setBuild(v, i) M.build = { v, "0", "Jan 1 2026", i } end
 
-function CreateFrame(_, name, _, _)
+-- As in the game: a frame can only hang from another frame.
+function CreateFrame(_, name, parent, _)
+    if type(parent) == "table" and parent._fontString then error("Wrong object type for function", 2) end
     local f = newWidget(name)
     table.insert(M.frames, f)
     if name then M.byName[name] = f; _G[name] = f end
@@ -131,6 +155,7 @@ Minimap = newWidget("Minimap")
 M.minimapRight, M.minimapTop = 1900, 800
 function Minimap:GetRight() return M.minimapRight end
 function Minimap:GetTop()   return M.minimapTop end
+function Minimap:GetCenter() return M.minimapRight - self._w / 2, M.minimapTop - self._h / 2 end
 function Minimap:GetZoom()  return M.state.zoom end
 function Minimap:SetZoom(z) M.state.zoom = z; M.zoomCalls = (M.zoomCalls or 0) + 1 end
 function Minimap:GetZoomLevels() return 6 end
