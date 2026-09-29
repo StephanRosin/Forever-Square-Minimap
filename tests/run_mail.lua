@@ -13,13 +13,20 @@ local function check(label, got, want)
         print(("  FAIL %-44s -> %s   (want: %s)"):format(label, tostring(got), tostring(want)))
     end
 end
-print("Mail without MiniMapMailFrame")
+print("WoW: Forever: mail without MiniMapMailFrame, buttons on the cluster")
 
 _G.MiniMapMailFrame = nil
 M.newMail = false
 _G.HasNewMail = function() return M.newMail end
 _G.GetLatestThreeSenders = function() return "Alice", "Bob" end
 _G.HAVE_MAIL_FROM = "Unread mail from:"
+-- The modern minimap: tracking and difficulty hang from the cluster, the
+-- calendar and the addon compartment are globals parented to it.
+MinimapCluster.Tracking = M.newWidget("ClusterTracking")
+MinimapCluster.Tracking.Background = MinimapCluster.Tracking:CreateTexture()
+MinimapCluster.Tracking.Button = M.newWidget("ClusterTrackingButton")
+MinimapCluster.InstanceDifficulty = M.newWidget("ClusterDifficulty")
+_G.AddonCompartmentFrame = M.newWidget("AddonCompartmentFrame")
 
 local ns = {}
 for line in io.lines(ROOT .. "/" .. ADDON .. ".toc") do
@@ -72,6 +79,46 @@ mail:GetScript("OnEvent")(mail, "UPDATE_PENDING_MAIL")
 check("real mail stays shown", mail:IsShown(), true)
 M.newMail = false
 mail:GetScript("OnEvent")(mail, "UPDATE_PENDING_MAIL")
+
+-- Blizzard's buttons: on the map, placed, above the border.
+local B = ns.Buttons
+check("modern client", B.Modern(), true)
+local track, cal = MinimapCluster.Tracking, GameTimeFrame
+check("tracking on the map", M.reparented["ClusterTracking"], "Minimap")
+check("tracking in the bottom right corner", track._anchor[1] .. ">" .. track._anchor[3], "BOTTOMRIGHT>BOTTOMRIGHT")
+check("tracking hangs from the map", track._anchor[2], Minimap)
+check("calendar kept, not hidden", cal:IsShown(), true)
+check("calendar on the map", M.reparented["GameTimeFrame"], "Minimap")
+check("compartment on the map", M.reparented["AddonCompartmentFrame"], "Minimap")
+check("difficulty bottom right", MinimapCluster.InstanceDifficulty._anchor[3], "BOTTOMRIGHT")
+check("above the border", M.level["ClusterTracking"], 3 + 10)
+check("like the mail icon: no round background", track.Background:GetAlpha(), 0)
+check("like the mail icon: one size", track:GetWidth() .. "x" .. track:GetHeight() .. " " .. cal:GetWidth(), "20x20 20")
+check("tracking art fills it", M.anchors["ClusterTrackingButton"], nil)
+check("compartment: a gear, not just the count", AddonCompartmentFrame.fsmIcon ~= nil, true)
+check("compartment: grey like the calendar", AddonCompartmentFrame.fsmIcon._color and AddonCompartmentFrame.fsmIcon._color[3], 0.8)
+B.Set("tracking", "show", false)
+check("off: invisible", track:GetAlpha(), 0)
+check("off: no mouse", M.mouse["ClusterTracking"], false)
+B.Set("tracking", "show", true)
+B.Set("calendar", "scale", 200)
+check("scaled", cal:GetScale(), 2)
+check("offsets stay pixels", track._anchor[4] .. "," .. track._anchor[5], "-2,28")
+B.Set("tracking", "scale", 200)
+check("scaled offsets stay pixels", track._anchor[4] .. "," .. track._anchor[5], "-1,14")
+local applied = 0
+local realApply = B.Apply
+B.Apply = function() applied = applied + 1; realApply() end
+B.Check()
+check("in place: nothing redone", applied, 0)
+-- Blizzard puts the difficulty back to its own place (Edit Mode header).
+MinimapCluster.InstanceDifficulty:SetPoint("BOTTOMRIGHT", MinimapCluster, "TOPRIGHT", -2, -2)
+B.Check()
+check("put back on the map", MinimapCluster.InstanceDifficulty._anchor[2], Minimap)
+B.Apply = realApply
+ns.DB().buttons = nil
+B.Apply()
+check("a sixth tab for the buttons", #ns.optionsPages, 6)
 
 print(("%d passed, %d failed"):format(pass, fail))
 os.exit(fail == 0 and 0 or 1)

@@ -15,7 +15,7 @@ local Button = {}
 ns.MinimapButton = Button
 
 Button.ICON = "Interface\\Icons\\INV_Misc_Map_01"
-Button.DEFAULTS = { show = true, angle = 308 }
+Button.DEFAULTS = { show = true, angle = 7 }
 local BORDER = "Interface\\Minimap\\MiniMap-TrackingBorder"
 local BACKGROUND = "Interface\\Minimap\\UI-Minimap-Background"
 local HIGHLIGHT = "Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight"
@@ -150,4 +150,22 @@ function Button.Create()
     -- HookScript, not hooksecurefunc: Forever hides hooked frame methods
     -- from Blizzard's code.
     Minimap:HookScript("OnSizeChanged", Button.Place)
+end
+
+-- Blizzard's addon compartment (the gear by the map) lists addons whose TOC
+-- names these global functions: a click there opens the options as well.
+function ForeverSquareMinimap_OnAddonCompartmentClick()
+    Button.ToggleOptions()
+end
+
+function ForeverSquareMinimap_OnAddonCompartmentEnter(_, menuButton)
+    if not menuButton then return end
+    GameTooltip:SetOwner(menuButton, "ANCHOR_LEFT")
+    GameTooltip:SetText(L.ADDON_NAME)
+    GameTooltip:AddLine(L.BUTTON_CLICK, 1, 1, 1)
+    GameTooltip:Show()
+end
+
+function ForeverSquareMinimap_OnAddonCompartmentLeave(_, menuButton)
+    if menuButton and GameTooltip:IsOwned(menuButton) then GameTooltip:Hide() end
 end

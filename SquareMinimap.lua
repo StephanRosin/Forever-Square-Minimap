@@ -44,7 +44,7 @@ local CONFIG = {
         "MinimapToggleButton",      -- the red X
         "MinimapZoneTextButton",    -- replaced by our own label
         "TimeManagerClockButton",   -- likewise; clicking it opened the stopwatch
-        "GameTimeFrame",            -- day/night; at 50x50 it broke the column
+        "GameTimeFrame",            -- older clients: day/night, 50x50, broke the column
     },
 }
 
@@ -236,8 +236,11 @@ local function ApplyShape()
     Minimap:SetMaskTexture("Interface\\ChatFrame\\ChatFrameBackground")
 
     for _, name in ipairs(CONFIG.hide) do
-        Hide(_G[name])
+        -- On the modern minimap GameTimeFrame is the calendar button, which
+        -- Buttons.lua keeps; on older clients it is the big day/night dial.
+        if name ~= "GameTimeFrame" or not ns.Buttons.Modern() then Hide(_G[name]) end
     end
+    ns.Buttons.Apply()
 
     LayoutButtons()
 
@@ -488,6 +491,7 @@ local function ApplyLook()
     UpdateLabels()
     ns.MinimapButton.Place()
     ns.Mail.Apply()
+    ns.Buttons.Apply()
     ns.Fade.Apply()
 end
 
@@ -523,6 +527,7 @@ events:SetScript("OnEvent", function()
         if self.since < 1 then return end
         self.since = 0
         UpdateLabels()
+        ns.Buttons.Check()
 
         local sig = VisibleSignature()
         if sig ~= self.lastSignature then

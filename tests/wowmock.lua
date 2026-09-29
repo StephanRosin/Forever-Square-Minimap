@@ -84,8 +84,8 @@ local function newWidget(name)
     function w:ClearAllPoints() M.anchors[self._name or self] = nil end
     function w:GetNumPoints() return M.placed[self._name or self] and 1 or 0 end
     function w:GetPoint()
-        local a = M.placed[self._name or self]
-        if a then return a[1], nil, nil, a[2], a[3] end
+        local a = self._anchor
+        if a then return a[1], a[2], a[3], a[4], a[5] end
     end
     function w:SetFrameStrata(v) M.strata[self._name or self] = v end
     function w:GetFrameStrata()  return M.strata[self._name or self] or "MEDIUM" end

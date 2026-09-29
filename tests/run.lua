@@ -198,10 +198,10 @@ check("created", button ~= nil, true)
 check("on the map", button._anchor[2], Minimap)
 check("shown by default", button:IsShown(), true)
 check("game icon, no own art", B.button.icon ~= nil, true)
--- 260 px map: half 130, 5 px outside; angle 308 lies on the bottom edge.
+-- 260 px map: half 130, 5 px outside; angle 7 lies on the right edge.
 local bx, by = buttonAt()
-check("default: bottom edge", close(by, -135), true)
-check("default: right of the middle", bx > 0 and bx < 135, true)
+check("default: right edge", close(bx, 135), true)
+check("default: a little above the middle", by > 0 and by < 40, true)
 B.Set("angle", 90)
 bx, by = buttonAt()
 check("90 degrees: top edge", close(by, 135), true)
@@ -223,6 +223,11 @@ Settings = { OpenToCategory = function(id) opened = id end }
 ns.optionsCategory = { GetID = function() return 42 end }
 button:GetScript("OnClick")(button)
 check("click opens the options", opened, 42)
+opened = nil
+ForeverSquareMinimap_OnAddonCompartmentClick("ForeverSquareMinimap", "LeftButton")
+check("addon compartment opens them too", opened, 42)
+local tocText = io.open(ROOT .. "/" .. ADDON .. ".toc"):read("*a")
+check("TOC names the compartment function", tocText:find("AddonCompartmentFunc: ForeverSquareMinimap_OnAddonCompartmentClick", 1, true) ~= nil, true)
 Settings, ns.optionsCategory = oldSettings, oldCategory
 B.Set("show", false)
 check("can be switched off", button:IsShown(), false)
@@ -231,7 +236,7 @@ ns.DB().buttonShow, ns.DB().buttonAngle = nil, nil
 ns.api.ApplyLook()
 check("profile change: shown again", button:IsShown(), true)
 bx = buttonAt()
-check("profile change: default place", bx > 0 and bx < 135, true)
+check("profile change: default place", close(bx, 135), true)
 for _, loc in ipairs({ "enUS", "deDE", "esES", "frFR" }) do
     for _, key in ipairs({ "OPT_BUTTON", "OPT_BUTTON_SHOW", "BUTTON_CLICK", "BUTTON_DRAG" }) do
         check(loc .. " " .. key, type(ns.Locales[loc][key]), "string")

@@ -23,7 +23,7 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 - Resize the map and the icons follow the new edge at once. You can still drag them around the edge as usual.
 
 ## Less clutter
-- Hidden: the round border, the north tag, the zoom buttons (the **mouse wheel zooms** instead), the world map button, the close button and Blizzard's clock and zone buttons.
+- Hidden: the round border, the north tag, the zoom buttons (the **mouse wheel zooms** instead), the world map button, the close button and Blizzard's clock and zone bar.
 
 ## Texts on and around the map
 - **Zone name** at the top, with the **server time** below it.
@@ -39,15 +39,21 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 - **Animated** while you have unread mail: glow, pulse, bounce or none.
 - **Test view** in the options: shows the icon while the options are open, so you can place it without waiting for a letter.
 
+## Blizzard's buttons
+- **Tracking**, **calendar**, the **addon compartment** and the **instance difficulty** move onto the map, since the round frame they hung from is gone.
+- Drawn as bare symbols in one size, like the mail icon, by default as a small column in the map's bottom right corner. Each can be switched off, placed anywhere and scaled.
+- The addon compartment gets a grey gear with the addon count, since Blizzard's round button has no bare symbol.
+
 ## Opacity
 - Separate opacity for out of combat and in combat, from fully visible down to invisible.
 - Optionally fully visible again while the mouse is over the map.
 
 ## Minimap button
 - A button on the map's edge opens the options with one click. Drag it along the edge to move it, or switch it off.
+- The addon is also listed in Blizzard's addon compartment.
 
 ## Options
-- Options window under Interface > AddOns > Forever Square Minimap, or one click on the minimap button, in five tabs: General (language, minimap button, opacity, profiles), Map (size, position, border), Texts, FPS & coordinates, Mail. Every slider has a text field for exact values.
+- Options window under Interface > AddOns > Forever Square Minimap, or one click on the minimap button, in six tabs: General (language, minimap button, opacity, profiles), Map (size, position, border), Texts, FPS & coordinates, Mail, Buttons. Every slider has a text field for exact values.
 - **Profiles**: save your layout under a name and switch between profiles per character. Your language stays when you switch.
 
 ## Commands

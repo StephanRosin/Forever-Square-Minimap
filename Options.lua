@@ -236,11 +236,39 @@ local function mailTab()
     return items
 end
 
+-- Blizzard's buttons around the map (Buttons.lua); only the modern minimap
+-- has them.
+local BUTTON_HEADERS = { tracking = "OPT_BTN_TRACKING", calendar = "OPT_BTN_CALENDAR",
+    compartment = "OPT_BTN_COMPARTMENT", difficulty = "OPT_BTN_DIFFICULTY" }
+
+local function buttonsTab()
+    local Buttons = ns.Buttons
+    local items = { { type = "tab", label = "TAB_BUTTONS" } }
+    for _, kind in ipairs(Buttons.KINDS) do
+        local function get(field) return function() return Buttons.Get(kind, field) end end
+        local function set(field) return function(v) Buttons.Set(kind, field, v) end end
+        add(items, {
+            { type = "header", label = BUTTON_HEADERS[kind] },
+            { type = "check", label = "OPT_PERF_SHOW", get = get("show"), set = set("show") },
+            { type = "select", label = "OPT_INFO_MAP_POINT", choices = pointChoices,
+              get = get("mapPoint"), set = set("mapPoint") },
+            { type = "select", label = "OPT_BTN_POINT", choices = pointChoices,
+              get = get("point"), set = set("point") },
+            { label = "OPT_MOVE_X", min = -400, max = 400, step = 1, unit = "px", get = get("x"), set = set("x") },
+            { label = "OPT_MOVE_Y", min = -400, max = 400, step = 1, unit = "px", get = get("y"), set = set("y") },
+            { label = "OPT_SCALE", min = 50, max = 250, step = 5, unit = "%", get = get("scale"), set = set("scale") },
+        })
+    end
+    return items
+end
+
 local events = CreateFrame("Frame")
 events:RegisterEvent("PLAYER_LOGIN")
 events:SetScript("OnEvent", function()
     local page = { title = L.ADDON_NAME }
-    for _, tab in ipairs({ generalTab, mapTab, textsTab, perfTab, mailTab }) do add(page, tab()) end
+    local tabs = { generalTab, mapTab, textsTab, perfTab, mailTab }
+    if ns.Buttons.Modern() then tabs[#tabs + 1] = buttonsTab end
+    for _, tab in ipairs(tabs) do add(page, tab()) end
     ns.BuildOptions(page)
     -- The mail test ends with the options.
     if ns.optionsPanel then
