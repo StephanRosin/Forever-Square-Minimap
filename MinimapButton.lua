@@ -64,24 +64,10 @@ function Button.Place()
     button:SetShown(Button.Get("show"))
 end
 
--- Opens (or closes) the options: the Settings window where the client has
--- it, the old interface options otherwise.
+-- Opens (or closes) the options window: the addon's own, which opens in
+-- combat too (Blizzard's settings panel cannot).
 function Button.ToggleOptions()
-    local category = ns.optionsCategory
-    if Settings and Settings.OpenToCategory and category then
-        if SettingsPanel and SettingsPanel:IsShown() then
-            HideUIPanel(SettingsPanel)
-            return
-        end
-        local id = category.GetID and category:GetID() or category.ID
-        Settings.OpenToCategory(id)
-        return
-    end
-    if InterfaceOptionsFrame_OpenToCategory and ns.optionsPanel then
-        -- Called twice: the old frame opens on the first call only.
-        InterfaceOptionsFrame_OpenToCategory(ns.optionsPanel)
-        InterfaceOptionsFrame_OpenToCategory(ns.optionsPanel)
-    end
+    if ns.Window then ns.Window.Toggle() end
 end
 
 -- The cursor's angle around the map's centre, in whole degrees.

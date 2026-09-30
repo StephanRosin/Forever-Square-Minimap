@@ -216,19 +216,19 @@ check("dragged to the right edge", close(bx, 135) and math.abs(by) < 1e-6, true)
 button:GetScript("OnDragStop")(button)
 check("angle stored on release", ns.DB().buttonAngle, 0)
 check("no longer following", button:GetScript("OnUpdate"), nil)
--- Click opens the options page.
-local opened
-local oldSettings, oldCategory = Settings, ns.optionsCategory
-Settings = { OpenToCategory = function(id) opened = id end }
-ns.optionsCategory = { GetID = function() return 42 end }
+-- Click opens the addon's own options window (it opens in combat too;
+-- Blizzard's settings panel would not).
 button:GetScript("OnClick")(button)
-check("click opens the options", opened, 42)
-opened = nil
+check("click opens the options", ns.Window.IsShown(), true)
 ForeverSquareMinimap_OnAddonCompartmentClick("ForeverSquareMinimap", "LeftButton")
-check("addon compartment opens them too", opened, 42)
+check("addon compartment toggles them too", ns.Window.IsShown(), false)
+M.state.combat = true
+button:GetScript("OnClick")(button)
+check("opens in combat", ns.Window.IsShown(), true)
+M.state.combat = false
+ns.Window.Toggle()
 local tocText = io.open(ROOT .. "/" .. ADDON .. ".toc"):read("*a")
 check("TOC names the compartment function", tocText:find("AddonCompartmentFunc: ForeverSquareMinimap_OnAddonCompartmentClick", 1, true) ~= nil, true)
-Settings, ns.optionsCategory = oldSettings, oldCategory
 B.Set("show", false)
 check("can be switched off", button:IsShown(), false)
 check("switch in the profile", ns.DB().buttonShow, false)
@@ -536,14 +536,14 @@ check("Mexican Spanish uses esES", ns.Locale.Resolve("AUTO", "esMX"), "esES")
 check("unknown game language -> English", ns.Locale.Resolve("AUTO", "koKR"), "enUS")
 check("a choice beats the game", ns.Locale.Resolve("frFR", "deDE"), "frFR")
 
-section("Options in tabs")
-local pages = ns.optionsPages
-check("five tabs", #pages, 5)
-check("first tab shown", pages[1].frame:IsShown() and not pages[2].frame:IsShown(), true)
-ns.optionsPanel.SelectTab(5)
-check("mail tab shown", pages[5].frame:IsShown() and not pages[1].frame:IsShown(), true)
-check("remembered", ns.optionsPanel.currentTab, 5)
-ns.optionsPanel.SelectTab(1)
+section("Options window")
+ns.Window.Open()
+check("five pages", ns.Window.PageCount(), 5)
+check("first page shown", M.byName["ForeverSquareMinimapPage1"]:IsShown(), true)
+ns.Window.ShowPage(5)
+check("mail page shown", M.byName["ForeverSquareMinimapPage5"]:IsShown(), true)
+check("the first one hidden", M.byName["ForeverSquareMinimapPage1"]:IsShown(), false)
+ns.Window.ShowPage(1)
 
 -- The options page follows a language change at once.
 local function shown(want)
@@ -556,7 +556,6 @@ ns.Locale.Set("deDE")
 check("setting stored account wide", ForeverSquareMinimapProfiles.language, "deDE")
 check("options in German", shown("FPS & Koordinaten"), true)
 check("buttons too", shown("Löschen"), true)
-check("the hint too", shown(ns.Locales.deDE.OPT_HINT), true)
 M.chat = {}
 slash("size 200")
 check("chat in German", (M.chat[1] or ""):find("Größe: 200 px", 1, true) ~= nil, true)

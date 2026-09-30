@@ -19,6 +19,7 @@ L.GRIP_CURRENT = "Actual: %d px"
 L.DUMP_HINT = "Ctrl+A, Ctrl+C para copiar. Esc cierra."
 
 L.OPT_HINT = "Arrastra para valores aproximados, escribe para valores exactos (confirma con Intro)."
+L.OPEN_OPTIONS = "Abrir las opciones"
 L.TAB_GENERAL = "General"
 L.TAB_MAP = "Mapa"
 L.TAB_TEXTS = "Textos"

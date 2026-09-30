@@ -270,15 +270,9 @@ events:SetScript("OnEvent", function()
     if ns.Buttons.Modern() then tabs[#tabs + 1] = buttonsTab end
     for _, tab in ipairs(tabs) do add(page, tab()) end
     ns.BuildOptions(page)
-    -- The mail test ends with the options.
-    if ns.optionsPanel then
-        ns.optionsPanel:HookScript("OnHide", function()
-            if ns.Mail.preview then ns.Mail.SetPreview(false) end
-        end)
-    end
 end)
 
--- A language change relabels the page at once.
-ns.Locale.OnChange(function()
-    if ns.RelabelOptions then ns.RelabelOptions() end
+-- The mail test ends with the options.
+ns.Window.OnHide(function()
+    if ns.Mail.preview then ns.Mail.SetPreview(false) end
 end)

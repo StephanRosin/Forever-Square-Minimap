@@ -126,10 +126,8 @@ function ns.ResetProfileState() ready = false end
 -- text is set when they open, so it follows the chosen language.
 -- ---------------------------------------------------------------------------
 local function refreshOptions()
-    local panel = ns.optionsPanel
-    if panel and panel.refresh then pcall(panel.refresh) end
+    if ns.Window and ns.Window.Refresh then pcall(ns.Window.Refresh) end
 end
-ns.RefreshOptions = refreshOptions
 
 local function saveAs(name)
     if name and name ~= "" then

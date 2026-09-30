@@ -18,6 +18,7 @@ L.GRIP_CURRENT = "Taille actuelle : %d px"
 L.DUMP_HINT = "Ctrl+A, Ctrl+C pour copier. Échap ferme."
 
 L.OPT_HINT = "Faites glisser pour une valeur approximative, tapez pour une valeur exacte (validez avec Entrée)."
+L.OPEN_OPTIONS = "Ouvrir les options"
 L.TAB_GENERAL = "Général"
 L.TAB_MAP = "Carte"
 L.TAB_TEXTS = "Textes"

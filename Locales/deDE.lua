@@ -18,6 +18,7 @@ L.GRIP_CURRENT = "Aktuell: %d px"
 L.DUMP_HINT = "Strg+A, Strg+C zum Kopieren. Esc schließt."
 
 L.OPT_HINT = "Ziehen für grobe Werte, tippen für genaue (mit Eingabe bestätigen)."
+L.OPEN_OPTIONS = "Optionen öffnen"
 L.TAB_GENERAL = "Allgemein"
 L.TAB_MAP = "Karte"
 L.TAB_TEXTS = "Texte"

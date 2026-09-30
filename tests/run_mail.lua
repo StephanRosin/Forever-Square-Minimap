@@ -118,7 +118,7 @@ check("put back on the map", MinimapCluster.InstanceDifficulty._anchor[2], Minim
 B.Apply = realApply
 ns.DB().buttons = nil
 B.Apply()
-check("a sixth tab for the buttons", #ns.optionsPages, 6)
+check("a sixth page for the buttons", ns.Window.PageCount(), 6)
 
 print(("%d passed, %d failed"):format(pass, fail))
 os.exit(fail == 0 and 0 or 1)

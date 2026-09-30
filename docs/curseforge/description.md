@@ -53,7 +53,7 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 - The addon is also listed in Blizzard's addon compartment.
 
 ## Options
-- Options window under Interface > AddOns > Forever Square Minimap, or one click on the minimap button, in six tabs: General (language, minimap button, opacity, profiles), Map (size, position, border), Texts, FPS & coordinates, Mail, Buttons. Every slider has a text field for exact values.
+- Its own options window in the style of Forever Unit Frames, opened with one click on the minimap button, from the addon compartment, with `/fsm` or under Interface > AddOns, **also in combat**: General (language, minimap button, opacity, profiles), Map (size, position, border), Texts, FPS & coordinates, Mail, Buttons. Every slider has a number box for exact values.
 - **Profiles**: save your layout under a name and switch between profiles per character. Your language stays when you switch.
 
 ## Commands

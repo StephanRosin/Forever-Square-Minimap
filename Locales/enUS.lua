@@ -42,6 +42,7 @@ L.DUMP_HINT = "Ctrl+A, Ctrl+C to copy. Esc closes."
 
 -- Options
 L.OPT_HINT = "Drag for rough values, type for exact ones (confirm with Enter)."
+L.OPEN_OPTIONS = "Open the options"
 L.TAB_GENERAL = "General"
 L.TAB_MAP = "Map"
 L.TAB_TEXTS = "Texts"
