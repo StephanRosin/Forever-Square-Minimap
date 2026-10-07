@@ -225,6 +225,25 @@ function Infos.SetScale(v)
     Infos.Update()
 end
 
+-- Both clocks in one format: "24" (21:07) or "12" (9:07 PM). Blizzard's
+-- own strings for AM/PM, so the suffix follows the game language.
+function Infos.ClockFormat()
+    return ns.DB().clock == "12" and "12" or "24"
+end
+
+function Infos.SetClockFormat(v)
+    ns.DB().clock = v
+    Infos.Update()
+end
+
+function Infos.FormatTime(hour, minute)
+    if Infos.ClockFormat() == "24" then return ("%02d:%02d"):format(hour, minute) end
+    local pattern = hour < 12 and (TIME_TWELVEHOURAM or "%d:%02d AM") or (TIME_TWELVEHOURPM or "%d:%02d PM")
+    local h = hour % 12
+    if h == 0 then h = 12 end
+    return pattern:format(h, minute)
+end
+
 local function styleFont(fs, kind)
     local path = fontPath(Infos.Get(kind, "font")) or fs.baseFont
     local size = Infos.Get(kind, "size")
@@ -292,12 +311,10 @@ function Infos.Update()
     -- GetGameTime is the server time, the one Blizzard's clock showed.
     local hour, minute
     if GetGameTime then hour, minute = GetGameTime() end
-    if hour and minute then
-        texts.server:SetText(("%02d:%02d"):format(hour, minute))
-    else
-        texts.server:SetText(date("%H:%M"))
-    end
-    texts["local"]:SetText(date("%H:%M"))
+    local now = date("*t")
+    if not (hour and minute) then hour, minute = now.hour, now.min end
+    texts.server:SetText(Infos.FormatTime(hour, minute))
+    texts["local"]:SetText(Infos.FormatTime(now.hour, now.min))
     Infos.UpdateCoords()
 
     if Infos.Get("perf", "show") then

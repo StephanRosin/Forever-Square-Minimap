@@ -144,8 +144,13 @@ C_Timer = { After = function(_, fn) table.insert(M.timers, fn) end }
 M.state = { ctrl = false, mouseDown = false, cursor = {0, 0}, zoom = 3 }
 function GetMinimapZoneText() return "Gadgetzan" end
 function GetZoneText()        return "Tanaris" end
-function GetGameTime()        return 21, 7 end
-function date(fmt)            return "21:07" end
+M.serverTime = { 21, 7 }
+M.localTime = { hour = 21, min = 7 }
+function GetGameTime()        return M.serverTime[1], M.serverTime[2] end
+function date(fmt)
+    if fmt == "*t" then return { hour = M.localTime.hour, min = M.localTime.min } end
+    return ("%02d:%02d"):format(M.localTime.hour, M.localTime.min)
+end
 
 function IsControlKeyDown()  return M.state.ctrl end
 function IsMouseButtonDown() return M.state.mouseDown end

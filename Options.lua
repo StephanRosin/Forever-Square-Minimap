@@ -219,6 +219,11 @@ local function textsTab()
         { type = "header", label = "OPT_INFO_ALL" },
         { label = "OPT_INFO_SCALE", min = 50, max = 200, step = 5, unit = "%",
           get = function() return Infos.Scale() end, set = function(v) Infos.SetScale(v) end },
+        { type = "select", label = "OPT_CLOCK",
+          choices = function()
+              return { { value = "24", label = L.CLOCK_24 }, { value = "12", label = L.CLOCK_12 } }
+          end,
+          get = function() return Infos.ClockFormat() end, set = function(v) Infos.SetClockFormat(v) end },
     }
     for _, kind in ipairs({ "zone", "server", "local" }) do add(items, infoSection(kind)) end
     return items

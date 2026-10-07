@@ -28,6 +28,7 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 ## Texts on and around the map
 - **Zone name** at the top, with the **server time** below it.
 - **Local time** of your computer at the bottom.
+- Both clocks in **24-hour** (21:07) or **12-hour** format (9:07 PM).
 - **Coordinates** of your character in the bottom left corner.
 - **FPS and world latency**, coloured green, yellow or red, on top of each other or side by side with a gap of your choice.
 - **Every text is yours to arrange**: switch it on or off, pin any of its points to any point of the map (inside or outside, with X/Y offset), and pick its font and size. Fonts from LibSharedMedia show up too.

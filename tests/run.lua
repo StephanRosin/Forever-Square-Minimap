@@ -103,6 +103,27 @@ check("server time", texts["21:07"], true)
 section("Texts on the map: defaults")
 local I = ns.Infos
 local T = I.texts
+
+section("Clock: 24 or 12 hours")
+check("24 hours by default", I.ClockFormat(), "24")
+check("local time, 24 hours", T["local"]._text, "21:07")
+I.SetClockFormat("12")
+check("server time, 12 hours", T.server._text, "9:07 PM")
+check("local time, 12 hours", T["local"]._text, "9:07 PM")
+check("in the profile", ns.DB().clock, "12")
+M.serverTime = { 0, 5 }; M.localTime = { hour = 12, min = 0 }
+I.Update()
+check("midnight is 12 AM", T.server._text, "12:05 AM")
+check("noon is 12 PM", T["local"]._text, "12:00 PM")
+TIME_TWELVEHOURAM = "%d:%02d vorm."
+I.Update()
+check("the game's AM/PM strings", T.server._text, "12:05 vorm.")
+TIME_TWELVEHOURAM = nil
+M.serverTime = { 9, 3 }
+I.SetClockFormat("24")
+check("back to 24 hours, leading zero", T.server._text, "09:03")
+M.serverTime = { 21, 7 }; M.localTime = { hour = 21, min = 7 }
+I.Update()
 local function a(region) return region._anchor end
 check("zone: top of the map", a(T.zone)[1] .. ">" .. a(T.zone)[3], "TOP>TOP")
 check("zone: on the map", a(T.zone)[2], Minimap)
