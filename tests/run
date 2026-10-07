@@ -5,7 +5,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$HERE"
 ROOT="$(cd "$HERE/.." && pwd)"
 status=0
-for t in run.lua run_mail.lua; do
+for t in run.lua run_mail.lua run_compartment.lua; do
     lua5.1 -e "ADDONDIR='$ROOT'" "$t" || status=1
 done
 exit $status

@@ -250,6 +250,14 @@ local function buttonsTab()
         add(items, {
             { type = "header", label = BUTTON_HEADERS[kind] },
             { type = "check", label = "OPT_PERF_SHOW", get = get("show"), set = set("show") },
+        })
+        if kind == "compartment" then
+            add(items, {
+                { type = "check", label = "OPT_BTN_COLLECT", get = get("collect"), set = set("collect") },
+                { type = "check", label = "OPT_BTN_HIDE_ICONS", get = get("hideIcons"), set = set("hideIcons") },
+            })
+        end
+        add(items, {
             { type = "select", label = "OPT_INFO_MAP_POINT", choices = pointChoices,
               get = get("mapPoint"), set = set("mapPoint") },
             { type = "select", label = "OPT_BTN_POINT", choices = pointChoices,

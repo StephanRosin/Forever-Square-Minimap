@@ -42,7 +42,8 @@ local FRAMES = {
 Buttons.DEFAULTS = {
     tracking = { show = true, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = -2, y = 28, scale = 100 },
     calendar = { show = true, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = 0, y = 0, scale = 100 },
-    compartment = { show = true, mapPoint = "BOTTOMRIGHT", point = "TOPRIGHT", x = -2, y = 75, scale = 100 },
+    compartment = { show = true, mapPoint = "BOTTOMRIGHT", point = "TOPRIGHT", x = -2, y = 75, scale = 100,
+        collect = true, hideIcons = false },
     difficulty = { show = true, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = -2, y = 82, scale = 100 },
 }
 
@@ -147,6 +148,8 @@ function Buttons.Apply()
             place(kind, frame)
         end
     end
+    -- The compartment's list and the addon icons (Compartment.lua).
+    ns.Compartment.Sync()
 end
 
 -- Once a second: put back what Blizzard moved away from the map.

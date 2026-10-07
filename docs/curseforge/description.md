@@ -43,6 +43,7 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 - **Tracking**, **calendar**, the **addon compartment** and the **instance difficulty** move onto the map, since the round frame they hung from is gone.
 - Drawn as bare symbols in one size, like the mail icon, by default as a small column in the map's bottom right corner. Each can be switched off, placed anywhere and scaled.
 - The addon compartment gets a grey gear with the addon count, since Blizzard's round button has no bare symbol.
+- **Every minimap button in the addon compartment**: addons with a LibDBIcon minimap button (most of them) are listed there too, not only those that register for it. No addon is listed twice. Optionally their buttons disappear from the map.
 
 ## Opacity
 - Separate opacity for out of combat and in combat, from fully visible down to invisible.

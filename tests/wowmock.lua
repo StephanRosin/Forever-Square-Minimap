@@ -92,6 +92,7 @@ local function newWidget(name)
     function w:SetFrameLevel(v)  M.level[self._name or self] = v end
     function w:EnableMouse(v)    M.mouse[self._name or self] = v end
     function w:SetParent(parent)
+        self._parent = parent
         M.reparented[self._name or self] = parent and parent.GetName and parent:GetName()
     end
     return w
