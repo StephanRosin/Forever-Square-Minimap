@@ -185,15 +185,20 @@ B.Set("compartment", "collect", true)
 check("on again", listed().questie, 1)
 
 local questieIcon = lib.objects.Questie
+local own = M.byName["ForeverSquareMinimapButton"]
 check("icons stay by default", questieIcon._parent, nil)
+check("own button stays by default", own:IsShown(), true)
 B.Set("compartment", "hideIcons", true)
+check("own button off the map too", own:IsShown(), false)
 check("icons off the map", questieIcon._parent ~= nil and questieIcon._parent ~= Minimap, true)
 check("under a hidden parent", questieIcon._parent and questieIcon._parent:IsShown(), false)
 B.Set("compartment", "show", false)
 check("compartment hidden: icons back", M.reparented["LibDBIcon10_Questie"], "Minimap")
+check("compartment hidden: own button back", own:IsShown(), true)
 B.Set("compartment", "show", true)
 B.Set("compartment", "collect", false)
 check("not collected: icons back", M.reparented["LibDBIcon10_Questie"], "Minimap")
+check("not collected: own button back", own:IsShown(), true)
 
 print(("%d passed, %d failed"):format(pass, fail))
 os.exit(fail == 0 and 0 or 1)

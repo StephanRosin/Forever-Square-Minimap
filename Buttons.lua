@@ -1,6 +1,7 @@
 --[[---------------------------------------------------------------------------
 Buttons.lua -- Blizzard's buttons around the map: tracking, calendar, the
-addon compartment and the instance difficulty.
+addon compartment and the instance difficulty; and our day/night orb
+(DayNight.lua), handled like them.
 
 WoW: Forever has the modern minimap. These buttons hang from MinimapCluster,
 which the addon hides to get rid of the round frame, so they vanished with
@@ -20,7 +21,7 @@ local ADDON, ns = ...
 local Buttons = {}
 ns.Buttons = Buttons
 
-Buttons.KINDS = { "tracking", "calendar", "compartment", "difficulty" }
+Buttons.KINDS = { "tracking", "calendar", "daynight", "compartment", "difficulty" }
 
 -- Only the modern minimap (WoW: Forever) has them on the cluster. Older
 -- clients keep their button column and day/night dial as before.
@@ -32,6 +33,8 @@ end
 local FRAMES = {
     tracking = function() return MinimapCluster.Tracking end,
     calendar = function() return _G.GameTimeFrame end,
+    -- Not Blizzard's: the old day/night orb, which Forever lacks (DayNight.lua).
+    daynight = function() return ns.DayNight.Frame() end,
     compartment = function() return _G.AddonCompartmentFrame end,
     difficulty = function() return MinimapCluster.InstanceDifficulty end,
 }
@@ -42,6 +45,8 @@ local FRAMES = {
 Buttons.DEFAULTS = {
     tracking = { show = true, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = -2, y = 28, scale = 100 },
     calendar = { show = true, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = 0, y = 0, scale = 100 },
+    -- Off by default; switched on, left of the calendar.
+    daynight = { show = false, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = -24, y = 0, scale = 100 },
     compartment = { show = true, mapPoint = "BOTTOMRIGHT", point = "TOPRIGHT", x = -2, y = 75, scale = 100,
         collect = true, hideIcons = false },
     difficulty = { show = true, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = -2, y = 82, scale = 100 },
@@ -148,8 +153,10 @@ function Buttons.Apply()
             place(kind, frame)
         end
     end
-    -- The compartment's list and the addon icons (Compartment.lua).
+    -- The compartment's list and the addon icons (Compartment.lua), our own
+    -- minimap button among them.
     ns.Compartment.Sync()
+    ns.MinimapButton.Place()
 end
 
 -- Once a second: put back what Blizzard moved away from the map.

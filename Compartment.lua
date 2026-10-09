@@ -142,6 +142,13 @@ local function HideIcons(lib)
     end
 end
 
+-- "Hide those buttons on the map": also our own minimap button, which is in
+-- the compartment through the TOC anyway.
+function Compartment.HidesIcons()
+    return ns.Buttons.Frame("compartment") ~= nil and ns.Buttons.Get("compartment", "collect")
+        and ns.Buttons.Get("compartment", "hideIcons") and ns.Buttons.Get("compartment", "show") and true or false
+end
+
 function Compartment.Sync()
     if not ready then return end
     local frame, lib = List(), Lib()
@@ -175,7 +182,7 @@ function Compartment.Sync()
 
     if changed and frame.UpdateDisplay then frame:UpdateDisplay() end
 
-    if on and ns.Buttons.Get("compartment", "hideIcons") and ns.Buttons.Get("compartment", "show") then
+    if Compartment.HidesIcons() then
         HideIcons(lib)
     else
         ShowIcons()

@@ -61,7 +61,7 @@ function Button.Place()
     local button = Button.button
     if not button then return end
     moveTo(button, Button.Get("angle"))
-    button:SetShown(Button.Get("show"))
+    button:SetShown(Button.Get("show") and not ns.Compartment.HidesIcons())
 end
 
 -- Opens (or closes) the options window: the addon's own, which opens in

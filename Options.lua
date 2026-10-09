@@ -244,7 +244,8 @@ end
 -- Blizzard's buttons around the map (Buttons.lua); only the modern minimap
 -- has them.
 local BUTTON_HEADERS = { tracking = "OPT_BTN_TRACKING", calendar = "OPT_BTN_CALENDAR",
-    compartment = "OPT_BTN_COMPARTMENT", difficulty = "OPT_BTN_DIFFICULTY" }
+    compartment = "OPT_BTN_COMPARTMENT", difficulty = "OPT_BTN_DIFFICULTY",
+    daynight = "OPT_BTN_DAYNIGHT" }
 
 local function buttonsTab()
     local Buttons = ns.Buttons

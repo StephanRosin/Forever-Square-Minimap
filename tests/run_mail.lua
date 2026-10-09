@@ -116,6 +116,33 @@ MinimapCluster.InstanceDifficulty:SetPoint("BOTTOMRIGHT", MinimapCluster, "TOPRI
 B.Check()
 check("put back on the map", MinimapCluster.InstanceDifficulty._anchor[2], Minimap)
 B.Apply = realApply
+
+-- The day/night orb Forever lacks: off by default, the old texture.
+local orb = M.byName["ForeverSquareMinimapDayNight"]
+check("day/night: made", orb ~= nil, true)
+check("day/night: off by default", orb:GetAlpha(), 0)
+check("day/night: the old orb", orb.icon._texture, "Interface\\Minimap\\UI-TOD-Indicator")
+B.Set("daynight", "show", true)
+check("day/night: on", orb:GetAlpha(), 1)
+check("day/night: on the map", orb._anchor[2], Minimap)
+check("day/night: left of the calendar", orb._anchor[4], -24)
+check("21:07 is night", ns.DayNight.IsDay(21, 7), false)
+check("5:29 is night", ns.DayNight.IsDay(5, 29), false)
+check("5:30 is day", ns.DayNight.IsDay(5, 30), true)
+check("20:59 is day", ns.DayNight.IsDay(20, 59), true)
+check("night half", orb.icon._coords and orb.icon._coords[1], 0.5)
+M.serverTime = { 12, 0 }
+ns.DayNight.Update()
+check("day half", orb.icon._coords and orb.icon._coords[1], 0)
+local tip = {}
+GameTooltip.SetText = function(_, t) tip[#tip + 1] = t end
+GameTooltip.AddLine = function(_, t) tip[#tip + 1] = t end
+orb:GetScript("OnEnter")(orb)
+check("tooltip: day and server time", table.concat(tip, ","), "Day,Server time: 12:00")
+M.serverTime = { 21, 7 }
+ns.DayNight.Update()
+B.Set("daynight", "show", false)
+
 ns.DB().buttons = nil
 B.Apply()
 check("a sixth page for the buttons", ns.Window.PageCount(), 6)
