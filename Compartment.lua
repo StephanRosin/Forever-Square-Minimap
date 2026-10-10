@@ -1,12 +1,16 @@
 --[[---------------------------------------------------------------------------
-Compartment.lua -- every LibDBIcon minimap button also in the addon
-compartment, and on request off the map.
+Compartment.lua -- every LibDBIcon minimap button and every addon with a
+settings page also in the addon compartment, and on request the buttons off
+the map.
 
 Blizzard's compartment lists only addons that name an AddonCompartmentFunc in
 their TOC or call AddonCompartmentFrame:RegisterAddon. Most addons only have
 a LibDBIcon button on the map, so the menu showed some of them. LibDBIcon
 keeps every button it made in lib.objects with its data object (icon,
 OnClick, tooltip), which is what an entry needs.
+Addons with neither, but with a page under Options > AddOns, get an entry
+that opens that page. The page is matched to a loaded addon by its name or
+title; a page that matches none is left out. A button wins over a page.
 
 No addon may be listed twice. An entry is left out, or taken back out, when
 another entry carries its button name or its addon title. That covers
@@ -33,7 +37,7 @@ local Compartment = {}
 ns.Compartment = Compartment
 
 local ready = false
-local entries = {}      -- LibDBIcon button name -> our entry in the list
+local entries = {}      -- "icon:<button name>" / "page:<addon>" -> our entry in the list
 local ours = {}         -- our entries, to tell them apart in the list
 local hiddenIcons = {}  -- LibDBIcon button name -> its button, while hidden
 local holder            -- the hidden parent
@@ -72,10 +76,15 @@ local function Taken(frame)
     return taken
 end
 
-local function ListedElsewhere(name, taken)
-    if taken[Key(name)] then return true end
-    local title = AddonTitle(name)
-    return title ~= nil and taken[Key(title)] == true
+local function AnyTaken(names, taken)
+    for _, name in pairs(names) do
+        if taken[Key(name)] then return true end
+    end
+    return false
+end
+
+local function Take(names, taken)
+    for _, name in pairs(names) do taken[Key(name)] = true end
 end
 
 -- Tooltip placement as LibDBIcon does it: away from the screen's edges.
@@ -87,7 +96,7 @@ local function Anchors(frame)
     return v .. h, frame, (v == "TOP" and "BOTTOM" or "TOP") .. h
 end
 
-local function NewEntry(name, object, lib)
+local function IconEntry(name, object, lib)
     local dataObject = object.dataObject
     local tooltip = lib.tooltip or GameTooltip
     return {
@@ -115,6 +124,96 @@ local function NewEntry(name, object, lib)
             if dataObject.OnLeave then dataObject.OnLeave(button) end
         end,
     }
+end
+
+-- Blizzard's way takes a number only; some addons set their page's ID to
+-- its name (Chattynator), which the settings window itself finds as well.
+local function OpenPage(category)
+    local id = category:GetID()
+    if type(id) == "number" then
+        Settings.OpenToCategory(id)
+    else
+        SettingsPanel:OpenToCategory(id)
+    end
+end
+
+local function PageEntry(addon, title, category)
+    local icon = C_AddOns.GetAddOnMetadata and (C_AddOns.GetAddOnMetadata(addon, "IconTexture")
+        or C_AddOns.GetAddOnMetadata(addon, "IconAtlas"))
+    return {
+        text = title,
+        icon = icon or "Interface\\Icons\\INV_Misc_Gear_01",
+        notCheckable = true,
+        func = function() OpenPage(category) end,
+        funcOnEnter = function(button)
+            GameTooltip:SetOwner(button, "ANCHOR_NONE")
+            GameTooltip:SetPoint(Anchors(button))
+            GameTooltip:SetText(title, 1, 1, 1)
+            GameTooltip:AddLine(ns.L.COMPARTMENT_OPEN_PAGE)
+            GameTooltip:Show()
+        end,
+        funcOnLeave = function() GameTooltip:Hide() end,
+    }
+end
+
+-- Loaded addons by the keys of their name and title.
+local function LoadedAddons()
+    local byKey = {}
+    if not (C_AddOns and C_AddOns.GetNumAddOns and C_AddOns.IsAddOnLoaded) then return byKey end
+    for i = 1, C_AddOns.GetNumAddOns() do
+        local name, title = C_AddOns.GetAddOnInfo(i)
+        if name and C_AddOns.IsAddOnLoaded(name) then
+            local addon = { name = name, title = title or name }
+            byKey[Key(name)] = byKey[Key(name)] or addon
+            byKey[Key(addon.title)] = byKey[Key(addon.title)] or addon
+        end
+    end
+    return byKey
+end
+
+-- The top-level pages under Options > AddOns.
+local function AddonPages()
+    local pages = {}
+    if not (SettingsPanel and SettingsPanel.GetAllCategories and Settings and Settings.CategorySet) then return pages end
+    for _, category in ipairs(SettingsPanel:GetAllCategories() or {}) do
+        if category:GetCategorySet() == Settings.CategorySet.AddOns and not category:HasParentCategory() then
+            pages[#pages + 1] = category
+        end
+    end
+    return pages
+end
+
+-- What could be listed, buttons first: id, the names it goes by, and how
+-- to make its entry.
+local function Candidates(lib)
+    local list = {}
+    if lib and type(lib.objects) == "table" then
+        local names = {}
+        for name, object in pairs(lib.objects) do
+            if type(object.dataObject) == "table" then names[#names + 1] = name end
+        end
+        table.sort(names)
+        for _, name in ipairs(names) do
+            list[#list + 1] = {
+                id = "icon:" .. name,
+                names = { name, AddonTitle(name) },
+                make = function() return IconEntry(name, lib.objects[name], lib) end,
+            }
+        end
+    end
+    local addons = LoadedAddons()
+    for _, category in ipairs(AddonPages()) do
+        local page = category:GetName()
+        local addon = addons[Key(page)]
+        if addon then
+            list[#list + 1] = {
+                id = "page:" .. addon.name,
+                names = { page, addon.name, addon.title },
+                make = function() return PageEntry(addon.name, addon.title, category) end,
+            }
+        end
+    end
+    return list
 end
 
 local function Remove(frame, data)
@@ -152,36 +251,39 @@ end
 function Compartment.Sync()
     if not ready then return end
     local frame, lib = List(), Lib()
-    if not frame or not lib or type(lib.objects) ~= "table" then return end
-    local on = ns.Buttons.Get("compartment", "collect")
+    if not frame then return end
     local taken = Taken(frame)
+    local wanted = {}
+    if ns.Buttons.Get("compartment", "collect") then
+        for _, candidate in ipairs(Candidates(lib)) do
+            if not AnyTaken(candidate.names, taken) then
+                wanted[candidate.id] = candidate
+                Take(candidate.names, taken)
+            end
+        end
+    end
     local changed = false
 
-    for name, data in pairs(entries) do
-        local object = lib.objects[name]
-        if not on or not object or ListedElsewhere(name, taken) then
+    for id, data in pairs(entries) do
+        if not wanted[id] then
             Remove(frame, data)
-            entries[name] = nil
+            entries[id] = nil
             changed = true
         end
     end
-
-    if on then
-        for name, object in pairs(lib.objects) do
-            if not entries[name] and type(object.dataObject) == "table"
-                and not ListedElsewhere(name, taken) then
-                local data = NewEntry(name, object, lib)
-                entries[name] = data
-                ours[data] = true
-                taken[Key(name)] = true
-                table.insert(frame.registeredAddons, data)
-                changed = true
-            end
+    for id, candidate in pairs(wanted) do
+        if not entries[id] then
+            local data = candidate.make()
+            entries[id] = data
+            ours[data] = true
+            table.insert(frame.registeredAddons, data)
+            changed = true
         end
     end
 
     if changed and frame.UpdateDisplay then frame:UpdateDisplay() end
 
+    if not lib or type(lib.objects) ~= "table" then return end
     if Compartment.HidesIcons() then
         HideIcons(lib)
     else

@@ -1,4 +1,5 @@
--- Every LibDBIcon button in the addon compartment, none twice (Compartment.lua).
+-- Every LibDBIcon button and every addon settings page in the addon
+-- compartment, none twice (Compartment.lua).
 -- A separate run: it needs the modern minimap and a compartment with a list.
 local M = dofile("wowmock.lua")
 local ROOT = ADDONDIR
@@ -46,13 +47,58 @@ compartment:SetScript("OnEvent", function(self)
     self:UnregisterEvent("PLAYER_ENTERING_WORLD")
 end)
 
-local TITLES = { AtlasLoot = "AtlasLoot Classic", Questie = "|cFFFFFFFFQuestie|r" }
+-- Installed addons: name, title, loaded, TOC icon.
+local ADDONS = {
+    { "AtlasLoot", "AtlasLoot Classic", true },
+    { "Questie", "|cFFFFFFFFQuestie|r", true },
+    { "Bartender4", "|cff33ff99Bartender|r4", true },
+    { "InfoPanel", "InfoPanel", true },
+    { "Chattynator", "Chattynator", true, "Interface\\AddOns\\Chattynator\\Logo.png" },
+    { "ScreenBackdrop", "ScreenBackdrop", true },
+    { "Sleeper", "Sleeper", false },
+}
+local function addonOf(id)
+    for i, a in ipairs(ADDONS) do
+        if id == i or id == a[1] then return a end
+    end
+    error("Invalid AddOn name")
+end
 C_AddOns = {
-    GetAddOnInfo = function(name)
-        if not TITLES[name] then error("Invalid AddOn name") end
-        return name, TITLES[name], "", true, nil, "INSECURE"
+    GetNumAddOns = function() return #ADDONS end,
+    GetAddOnInfo = function(id)
+        local a = addonOf(id)
+        return a[1], a[2], "", true, nil, "INSECURE"
+    end,
+    IsAddOnLoaded = function(id) return addonOf(id)[3] end,
+    GetAddOnMetadata = function(id, field)
+        if field == "IconTexture" then return addonOf(id)[4] end
     end,
 }
+
+-- The settings window: pages under Options > AddOns and Game.
+Settings = { CategorySet = { Game = 1, AddOns = 2 } }
+local opened
+function Settings.OpenToCategory(id) opened = id end
+local pages = {}
+local function page(name, set, parent)
+    local category = { id = #pages + 100, name = name, set = set or 2, parent = parent }
+    function category:GetID() return self.id end
+    function category:GetName() return self.name end
+    function category:GetCategorySet() return self.set end
+    function category:HasParentCategory() return self.parent ~= nil end
+    pages[#pages + 1] = category
+    return category
+end
+SettingsPanel = { GetAllCategories = function() return pages end }
+function SettingsPanel:OpenToCategory(id) opened = "panel:" .. tostring(id) end
+page("InfoPanel")
+page("Chattynator").id = "Chattynator"  -- as Chattynator does
+page("Bartender4")
+page("Questie")
+page("Some Library")
+page("Sleeper")
+page("Graphics", 1)
+page("InfoPanel Colors", 2, pages[1])
 
 -- LibDBIcon as far as Compartment.lua uses it, AddButtonToCompartment as
 -- in the library (minor 56).
@@ -146,7 +192,7 @@ check("Bartender4 not twice (TOC title)", listed().bartender4, 1)
 check("AtlasLoot not added (addon title listed)", listed().atlasloot, nil)
 check("DBM not twice (LibDBIcon's own)", listed().dbm, 1)
 check("nothing twice", twice(), "")
-check("count updated", AddonCompartmentFrame.count, 5)
+check("count updated", AddonCompartmentFrame.count, 7)
 check("other addon's settings untouched", lib.objects.Questie.db.showInCompartment, nil)
 
 local questie = entry("Questie")
@@ -157,6 +203,29 @@ local menuButton = M.newWidget()
 menuButton.GetCenter = function() return 1800, 300 end
 questie.funcOnEnter(menuButton)
 check("tooltip from the data object", GameTooltip.shown, "Questie")
+
+-- Addons with only a settings page.
+check("InfoPanel by its page", listed().infopanel, 1)
+check("Chattynator by its page", listed().chattynator, 1)
+check("page of an unknown addon left out", listed().somelibrary, nil)
+check("page of an addon not loaded left out", listed().sleeper, nil)
+check("game pages left out", listed().graphics, nil)
+check("sub-pages left out", listed().infopanelcolors, nil)
+check("button wins over page", entry("Questie") ~= nil and entry("Questie").icon, "Interface\\Icons\\Questie")
+local chatty = entry("Chattynator")
+check("icon from the TOC", chatty.icon, "Interface\\AddOns\\Chattynator\\Logo.png")
+check("gear without a TOC icon", entry("InfoPanel").icon, "Interface\\Icons\\INV_Misc_Gear_01")
+chatty.func(nil, { buttonName = "LeftButton" }, M.newWidget())
+check("named ID: through the settings window", opened, "panel:Chattynator")
+entry("InfoPanel").func(nil, { buttonName = "LeftButton" }, M.newWidget())
+check("number ID: Blizzard's way", opened, pages[1]:GetID())
+chatty.funcOnEnter(menuButton)
+check("tooltip names it", GameTooltip:GetText(), "Chattynator")
+
+-- A page made later shows before the menu opens.
+page("ScreenBackdrop")
+AddonCompartmentFrame.hooks.OnEnter(AddonCompartmentFrame)
+check("late page added", listed().screenbackdrop, 1)
 
 -- A new icon later, through LibDBIcon's callback.
 icon("Details")
@@ -180,9 +249,12 @@ check("nothing twice at the end", twice(), "")
 local B = ns.Buttons
 B.Set("compartment", "collect", false)
 check("off: ours gone", listed().questie, nil)
+check("off: pages gone", listed().infopanel, nil)
 check("off: others kept", listed().dbm, 1)
 B.Set("compartment", "collect", true)
 check("on again", listed().questie, 1)
+check("pages again", listed().infopanel, 1)
+check("nothing twice after on/off", twice(), "")
 
 local questieIcon = lib.objects.Questie
 local own = M.byName["ForeverSquareMinimapButton"]
