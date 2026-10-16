@@ -27,6 +27,19 @@ MinimapCluster.Tracking.Background = MinimapCluster.Tracking:CreateTexture()
 MinimapCluster.Tracking.Button = M.newWidget("ClusterTrackingButton")
 MinimapCluster.InstanceDifficulty = M.newWidget("ClusterDifficulty")
 _G.AddonCompartmentFrame = M.newWidget("AddonCompartmentFrame")
+-- Build 70425: framed tracking and calendar art, re-set on every hover; the
+-- bare atlases from before still exist.
+for _, b in ipairs({ MinimapCluster.Tracking.Button, GameTimeFrame }) do
+    b.StateTexture = b:CreateTexture()
+    b.StateTexture:SetPoint("CENTER", b)
+end
+GameTimeFrame.calendarDay = 16
+_G.C_Texture = { GetAtlasInfo = function(name)
+    return (name:find("^ui%-hud%-minimap%-tracking%-") or name:find("^ui%-hud%-calendar%-")) and {} or nil
+end }
+-- Build 70425: the round art is a texture filling the button, not NormalTexture.
+AddonCompartmentFrame.StateTexture = AddonCompartmentFrame:CreateTexture()
+AddonCompartmentFrame.StateTexture:SetPoint("CENTER", AddonCompartmentFrame)
 
 local ns = {}
 for line in io.lines(ROOT .. "/" .. ADDON .. ".toc") do
@@ -96,6 +109,19 @@ check("like the mail icon: no round background", track.Background:GetAlpha(), 0)
 check("like the mail icon: one size", track:GetWidth() .. "x" .. track:GetHeight() .. " " .. cal:GetWidth(), "20x20 20")
 check("tracking art fills it", M.anchors["ClusterTrackingButton"], nil)
 check("compartment: a gear, not just the count", AddonCompartmentFrame.fsmIcon ~= nil, true)
+local function artAfterUpdate(b)
+    b.fsmIcon.SetAtlas = function(self, atlas) self._atlas = atlas end
+    b:GetScript("OnUpdate")(b)
+    return b.fsmIcon._atlas
+end
+local trackButton = MinimapCluster.Tracking.Button
+check("tracking: framed art gone", M.anchors[trackButton.StateTexture], nil)
+check("tracking: the bare lens", artAfterUpdate(trackButton), "ui-hud-minimap-tracking-up")
+trackButton.IsOver = function() return true end
+check("tracking: lit on hover", artAfterUpdate(trackButton), "ui-hud-minimap-tracking-mouseover")
+check("calendar: framed art gone", M.anchors[cal.StateTexture], nil)
+check("calendar: today's date", artAfterUpdate(cal), "ui-hud-calendar-16-up")
+check("compartment: Blizzard's round art gone", M.anchors[AddonCompartmentFrame.StateTexture], nil)
 check("compartment: grey like the calendar", AddonCompartmentFrame.fsmIcon._color and AddonCompartmentFrame.fsmIcon._color[3], 0.8)
 B.Set("tracking", "show", false)
 check("off: invisible", track:GetAlpha(), 0)

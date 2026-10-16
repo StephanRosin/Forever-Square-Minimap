@@ -21,6 +21,10 @@ local function newWidget(name)
     function w:GetName()  return self._name end
     function w:SetScript(s, fn) self._scripts[s] = fn end
     function w:GetScript(s)     return self._scripts[s] end
+    function w:HookScript(s, fn)
+        local old = self._scripts[s]
+        self._scripts[s] = old and function(...) old(...); fn(...) end or fn
+    end
     function w:SetSize(a, b)    self._w, self._h = a, b end
     function w:GetWidth()       return self._w end
     function w:GetHeight()      return self._h end

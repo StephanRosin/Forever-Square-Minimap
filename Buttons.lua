@@ -62,6 +62,49 @@ Buttons.ICON = 20
 Buttons.GEAR = "Interface\\Buttons\\UI-OptionsButton"
 Buttons.GREY = { 0.9, 0.87, 0.8 }
 
+-- Since build 70425 Blizzard draws these buttons with StateTexture/AddTexture
+-- and sets their atlas and alpha on every hover, never their points: without
+-- points they are not drawn.
+local function hideArt(button)
+    for _, key in ipairs({ "StateTexture", "AddTexture" }) do
+        local art = button[key]
+        if type(art) == "table" and art.ClearAllPoints then art:ClearAllPoints() end
+    end
+end
+
+-- Build 70425 also framed the tracking and calendar symbols. The bare ones
+-- from before are drawn instead, in the same three states; a client without
+-- those atlases keeps Blizzard's art.
+local OLD_ART = {
+    tracking = function() return "ui-hud-minimap-tracking-%s" end,
+    calendar = function(button) return "ui-hud-calendar-" .. (button.calendarDay or 1) .. "-%s" end,
+}
+
+local function stateOf(button)
+    if (button.IsDownOver and button:IsDownOver()) or (button.IsDown and button:IsDown()) then return "down" end
+    if (button.IsOver and button:IsOver()) or (button.IsMenuOpen and button:IsMenuOpen()) then return "mouseover" end
+    return "up"
+end
+
+local function oldArt(kind, button)
+    local atlasOf = OLD_ART[kind]
+    if type(button.StateTexture) ~= "table" or not (C_Texture and C_Texture.GetAtlasInfo)
+        or not C_Texture.GetAtlasInfo(atlasOf(button):format("up")) then return end
+    hideArt(button)
+    local icon = button:CreateTexture(nil, "ARTWORK")
+    icon:SetAllPoints(button)
+    button.fsmIcon = icon
+    local shown
+    -- OnUpdate: the calendar's day changes at midnight without any script.
+    button:HookScript("OnUpdate", function(self)
+        local atlas = atlasOf(self):format(stateOf(self))
+        if atlas ~= shown then
+            icon:SetAtlas(atlas)
+            shown = atlas
+        end
+    end)
+end
+
 local SKINS = {
     tracking = function(frame)
         if type(frame.Background) == "table" then frame.Background:SetAlpha(0) end
@@ -70,10 +113,12 @@ local SKINS = {
         if type(button) == "table" then
             button:ClearAllPoints()
             button:SetAllPoints(frame)
+            oldArt("tracking", button)
         end
     end,
     calendar = function(frame)
         frame:SetSize(Buttons.ICON, Buttons.ICON)
+        oldArt("calendar", frame)
     end,
     compartment = function(frame)
         -- Blizzard's art is a round button with the addon count on it, and
@@ -83,6 +128,7 @@ local SKINS = {
         if normal then normal:SetAlpha(0) end
         local pushed = frame.GetPushedTexture and frame:GetPushedTexture()
         if pushed then pushed:SetAlpha(0) end
+        hideArt(frame)
         frame:SetSize(Buttons.ICON, Buttons.ICON)
         local icon = frame:CreateTexture(nil, "ARTWORK")
         icon:SetTexture(Buttons.GEAR)
