@@ -227,13 +227,25 @@ function LayoutButtons()
     end
 end
 
+local SQUARE_MASK = "Interface\\ChatFrame\\ChatFrameBackground"
+
+-- Blizzard sets its round mask again whenever the rotate option changes. Its
+-- own callback may run after ours, hence the next-frame delay.
+local function KeepMaskSquare()
+    if not CVarCallbackRegistry then return end
+    CVarCallbackRegistry:RegisterCallback("rotateMinimap", function()
+        C_Timer.After(0, function() Minimap:SetMaskTexture(SQUARE_MASK) end)
+    end)
+end
+
 local function ApplyShape()
     -- Take the map out of the cluster so the cluster's bar at the top can go.
     if Minimap.SetParent then Minimap:SetParent(UIParent) end
     Hide(MinimapCluster)
     ns.Mail.Create()
 
-    Minimap:SetMaskTexture("Interface\\ChatFrame\\ChatFrameBackground")
+    Minimap:SetMaskTexture(SQUARE_MASK)
+    KeepMaskSquare()
 
     for _, name in ipairs(CONFIG.hide) do
         -- On the modern minimap GameTimeFrame is the calendar button, which

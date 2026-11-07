@@ -16,6 +16,11 @@ local function tocFiles()
     return files
 end
 
+-- Forever's registry; older clients have none.
+local rotateCallback
+CVarCallbackRegistry = {
+    RegisterCallback = function(_, name, fn) if name == "rotateMinimap" then rotateCallback = fn end end,
+}
 local ns = {}
 for _, f in ipairs(tocFiles()) do
     local chunk, err = loadfile(ROOT .. "/" .. f)
@@ -50,6 +55,14 @@ check("north tag hidden", M.hidden["MinimapNorthTag"], true)
 check("zoom button hidden", M.hidden["MinimapZoomIn"], true)
 check("slash command", type(SlashCmdList["FOREVERSQUAREMINIMAP"]), "function")
 check("short alias /fsm", SLASH_FOREVERSQUAREMINIMAP2, "/fsm")
+
+section("The mask stays square when rotation is switched")
+local mask
+Minimap.SetMaskTexture = function(_, asset) mask = asset end
+Minimap:SetMaskTexture("ui-hud-minimap-frame-generic-mask")   -- what Blizzard does on the switch
+rotateCallback()
+M.timers[#M.timers]()
+check("square mask back", mask, "Interface\\ChatFrame\\ChatFrameBackground")
 
 section("The column holds only shown buttons")
 local function anchorY(n) local a = M.placed[n]; return a and a[3] end
@@ -483,7 +496,7 @@ check("under its name", ns.ActiveProfile(), "Gone")
 section("Settings live in SavedVariables only")
 for _, f in ipairs(tocFiles()) do
     local src = io.open(ROOT .. "/" .. f):read("*a")
-    check("no CVar storage in " .. f, src:find("CVar", 1, true), nil)
+    check("no CVar storage in " .. f, src:find("SetCVar", 1, true) or src:find("C_CVar", 1, true), nil)
 end
 
 section("Clocks")
