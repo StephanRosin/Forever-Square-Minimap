@@ -173,16 +173,19 @@ local function generalTab()
 end
 
 local function mapTab()
+    local reachX = math.max(600, math.ceil(UIParent:GetWidth() or 0))
+    local reachY = math.max(600, math.ceil(UIParent:GetHeight() or 0))
     return {
         { type = "tab", label = "TAB_MAP" },
         { type = "header", label = "OPT_MAP" },
         { label = "OPT_SIZE", min = C.minSize, max = C.maxSize, step = 1, unit = "px",
           get = function() return num("size", C.defaultSize) end,
           set = function(v) ns.api.ApplySize(v) end },
-        { label = "OPT_MOVE_X", min = -600, max = 600, step = 1, unit = "px",
+        -- A whole screen each way, so the map can reach any edge (and leave the screen).
+        { label = "OPT_MOVE_X", min = -reachX, max = reachX, step = 1, unit = "px",
           get = function() return num("offsetX", C.offsetX) end,
           set = function(v) DB().offsetX = v; ns.api.AnchorTopRight() end },
-        { label = "OPT_MOVE_Y", min = -600, max = 600, step = 1, unit = "px",
+        { label = "OPT_MOVE_Y", min = -reachY, max = reachY, step = 1, unit = "px",
           get = function() return num("offsetY", C.offsetY) end,
           set = function(v) DB().offsetY = v; ns.api.AnchorTopRight() end },
 
