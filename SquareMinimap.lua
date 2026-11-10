@@ -505,6 +505,7 @@ local function ApplyLook()
     ns.Mail.Apply()
     ns.Buttons.Apply()
     ns.Fade.Apply()
+    ns.PlayerArrow.Apply()
 end
 
 -- --------------------------------------------------------------------------
@@ -526,6 +527,7 @@ events:SetScript("OnEvent", function()
     UpdateLabels()
     ns.MinimapButton.Create()
     ns.Fade.Create()
+    ns.PlayerArrow.Apply()
 
     -- Icons need a moment until every addon has registered its button.
     -- LibDBIcon waits for the same reason.

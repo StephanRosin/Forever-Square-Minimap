@@ -188,6 +188,8 @@ local function mapTab()
         { label = "OPT_MOVE_Y", min = -reachY, max = reachY, step = 1, unit = "px",
           get = function() return num("offsetY", C.offsetY) end,
           set = function(v) DB().offsetY = v; ns.api.AnchorTopRight() end },
+        { label = "OPT_PLAYER_ARROW", min = 100, max = 300, step = 10, unit = "%",
+          get = function() return ns.PlayerArrow.Get() end, set = function(v) ns.PlayerArrow.Set(v) end },
 
         { type = "header", label = "OPT_BORDER" },
         {

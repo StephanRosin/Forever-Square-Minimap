@@ -315,6 +315,33 @@ sc, dy, gl = Mail.AnimFrame("GLOW", 0.35)
 check("glow lights", gl > 0.9, true)
 check("none is still", select(3, Mail.AnimFrame("NONE", 1)) == 0 and Mail.AnimFrame("NONE", 1) == 1, true)
 
+section("Player arrow")
+do
+    local A = ns.PlayerArrow
+    A.Apply()
+    check("100 %: no own arrow", A.frame, nil)
+    local facing, rotate = 1.5, false
+    GetPlayerFacing = function() return facing end
+    GetCVarBool = function(name) return name == "rotateMinimap" and rotate end
+    local turned
+    A.Set(200)
+    local icon = A.frame.icon
+    icon.SetRotation = function(_, r) turned = r end
+    A.frame:GetScript("OnUpdate")(A.frame)
+    check("200 %: twice the size", A.frame:GetWidth(), 2 * A.BASE)
+    check("turns with the player", turned, 1.5)
+    rotate = true
+    A.frame:GetScript("OnUpdate")(A.frame)
+    check("turning map: points up", turned, 0)
+    rotate, facing = false, nil
+    A.frame:GetScript("OnUpdate")(A.frame)
+    check("no facing (instance): hidden, Blizzard's shows", icon:IsShown(), false)
+    A.Set(100)
+    check("back to 100 %: gone", A.frame:IsShown(), false)
+    check("saved in the profile", ns.DB().playerArrow, 100)
+    GetPlayerFacing, GetCVarBool = nil, nil
+end
+
 section("Opacity")
 local Fade = ns.Fade
 check("default: opaque", Fade.Target(false, false), 1)
