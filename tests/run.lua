@@ -53,6 +53,10 @@ check("size in the profile", ns.DB().size, 260)
 check("border hidden", M.hidden["MinimapBorder"], true)
 check("north tag hidden", M.hidden["MinimapNorthTag"], true)
 check("zoom button hidden", M.hidden["MinimapZoomIn"], true)
+for _, key in ipairs({ "ZoomIn", "ZoomOut" }) do
+    local parent = Minimap[key]._parent
+    check("modern " .. key .. " on a hidden parent", parent ~= nil and parent ~= Minimap and not parent:IsShown(), true)
+end
 check("slash command", type(SlashCmdList["FOREVERSQUAREMINIMAP"]), "function")
 check("short alias /fsm", SLASH_FOREVERSQUAREMINIMAP2, "/fsm")
 

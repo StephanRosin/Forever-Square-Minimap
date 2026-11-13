@@ -252,6 +252,17 @@ local function ApplyShape()
         -- Buttons.lua keeps; on older clients it is the big day/night dial.
         if name ~= "GameTimeFrame" or not ns.Buttons.Modern() then Hide(_G[name]) end
     end
+
+    -- The modern minimap's + and - buttons have no global name (Minimap.ZoomIn,
+    -- Minimap.ZoomOut) and Blizzard shows them again on every hover, so :Hide()
+    -- does not last. On a hidden parent their Show() has no visible effect.
+    local parked = CreateFrame("Frame")
+    parked:Hide()
+    for _, key in ipairs({ "ZoomIn", "ZoomOut" }) do
+        local button = Minimap[key]
+        if button and button.SetParent then button:SetParent(parked) end
+    end
+
     ns.Buttons.Apply()
 
     LayoutButtons()
