@@ -29,6 +29,7 @@ local holder, backs, shadows, ornaments
 local function art()
     return ns.Themes.Spec(ns.Themes.Current()).art or {}
 end
+ThemeArt.Art = art
 
 -- The padding between map and border, in UI units; 0 for CLASSIC.
 function ThemeArt.Padding()

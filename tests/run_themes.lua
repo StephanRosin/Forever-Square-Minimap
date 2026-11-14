@@ -143,6 +143,32 @@ check("comic: paper grey", backs[1]._color[1], 0.7)
 check("comic: paper opaque", backs[1]._color[4], 1)
 Themes.Switch("CLASSIC")
 
+-- Every theme takes exactly the room of Classic's map and border: the map
+-- is drawn smaller by what the look reaches out further. Ornaments inside.
+local function outerBox()
+    local reach, anchor = ns.api.Reach(), Minimap._anchor
+    return Minimap:GetWidth() + 2 * reach, anchor[4] + reach, anchor[5] + reach
+end
+local function near(a, b) return math.abs(a - b) < 1e-6 end
+Themes.Switch("CLASSIC")
+local w0, x0, y0 = outerBox()
+for _, id in ipairs(Themes.IDS) do
+    Themes.Switch(id)
+    local w, x, y = outerBox()
+    check(id .. ": outer width as classic", near(w, w0), true)
+    check(id .. ": outer corner as classic", near(x, x0) and near(y, y0), true)
+    check(id .. ": ornaments inside the edge", ((Themes.SPECS[id].art or {}).ornamentInset or 0) >= 0, true)
+end
+Themes.Switch("WOOD")
+check("wood: map drawn smaller", Minimap:GetWidth() < db.size, true)
+check("wood: stored size is classic's", db.size, 300)
+db.borderSize = 6
+ns.api.ApplyBorder()
+local w = outerBox()
+check("wood: a thicker border keeps the box", near(w, w0), true)
+Themes.Switch("CLASSIC")
+check("classic: map at its own size", Minimap:GetWidth(), 300)
+
 -- Refused.
 combat = true
 check("combat: switch", select(2, Themes.Switch("TECH")), "COMBAT")
@@ -154,6 +180,7 @@ check("unknown", select(2, Themes.Switch("NOPE")), "UNKNOWN")
 -- A non-Latin client keeps its font, gets the rest of the look.
 M.locale = "ruRU"
 Themes.Switch("RUNESTONE")
+Themes.Reset()
 check("ruRU: own font kept", Infos.Get("zone", "font"), "Friz Quadrata")
 check("ruRU: theme border", db.borderColor[1], 0.1)
 M.locale = "enUS"

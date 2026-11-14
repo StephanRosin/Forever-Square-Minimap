@@ -83,12 +83,20 @@ end
 -- --------------------------------------------------------------------------
 -- Size
 -- --------------------------------------------------------------------------
-local LayoutButtons, ApplyBorder   -- defined further down, needed here already
+local LayoutButtons, ApplyBorder, ThemeInset, AnchorTopRight   -- defined further down, needed here already
+
+-- The map as drawn: a theme draws its look inside the room the Classic map
+-- and border take, so the map is smaller by ThemeInset on each side.
+local function DrawnSize()
+    return max(1, (ns.DB().size or CONFIG.defaultSize) - 2 * ThemeInset())
+end
 
 local function ApplySize(size)
     size = max(CONFIG.minSize, min(CONFIG.maxSize, floor(size + 0.5)))
     ns.DB().size = size
-    Minimap:SetSize(size, size)
+    local drawn = DrawnSize()
+    Minimap:SetSize(drawn, drawn)
+    AnchorTopRight()
 
     -- Without this nudge the map does not redraw after SetSize and keeps
     -- showing the old section. Leatrix Plus does the same.
@@ -115,13 +123,15 @@ end
 -- add the shift up on every call.
 local baseRight, baseTop
 
-local function AnchorTopRight()
+function AnchorTopRight()
     if not baseRight then
         baseRight, baseTop = Minimap:GetRight(), Minimap:GetTop()
         if not baseRight or not baseTop then return false end
     end
-    local dx = ns.DB().offsetX or CONFIG.offsetX
-    local dy = ns.DB().offsetY or CONFIG.offsetY
+    -- The outer top right corner stays where Classic's is.
+    local inset = ThemeInset()
+    local dx = (ns.DB().offsetX or CONFIG.offsetX) - inset
+    local dy = (ns.DB().offsetY or CONFIG.offsetY) - inset
     Minimap:ClearAllPoints()
     Minimap:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", baseRight + dx, baseTop + dy)
     return true
@@ -358,7 +368,7 @@ local function CreateGrip()
         local cx, cy = GetCursorPosition()
         cx, cy = cx / scale, cy / scale
         -- The corner follows the cursor; the square takes the longer edge.
-        ApplySize(max(self.fixedRight - cx, self.fixedTop - cy))
+        ApplySize(max(self.fixedRight - cx, self.fixedTop - cy) + 2 * ThemeInset())
     end)
 end
 
@@ -454,14 +464,15 @@ local function PaintGold(ring)
     Gradient(ring[4], GOLD.SHADE, GOLD.MID)
 end
 
-local function BorderStyle()
-    local style = ns.DB().borderStyle
+-- Of the live settings, or of a stored set (db).
+local function BorderStyle(db)
+    local style = (db or ns.DB()).borderStyle
     if style ~= "NONE" and style ~= "FLAT" and style ~= "GOLD" then style = CONFIG.borderStyle end
     return style
 end
 
-local function BorderSize()
-    local size = ns.DB().borderSize
+local function BorderSize(db)
+    local size = (db or ns.DB()).borderSize
     if type(size) ~= "number" then size = CONFIG.borderSize end
     return max(1, min(CONFIG.borderMaxSize, floor(size + 0.5)))
 end
@@ -472,7 +483,28 @@ local function BorderColor()
     return c
 end
 
+-- How far the look reaches out of the drawn map: a theme's padding, the
+-- ring, a theme's solid shadow.
+local function Reach(db, art)
+    local ring = BorderStyle(db) == "NONE" and 0 or BorderSize(db) * OnePixel()
+    return (art.padding or 0) + ring + (art.hardShadow or 0)
+end
+
+-- How much smaller the map is drawn under a theme: what its look reaches
+-- out further than Classic's border, which the windows around the map
+-- (stacked edge to edge) are lined up with.
+function ThemeInset()
+    local classic = ns.Themes.ClassicSet()
+    if not classic then return 0 end
+    return max(0, Reach(ns.DB(), ns.ThemeArt.Art()) - Reach(classic, {}))
+end
+
 function ApplyBorder()
+    -- A changed border can change the room the theme's look needs.
+    if math.abs(Minimap:GetWidth() - DrawnSize()) > 0.01 then
+        ApplySize(ns.DB().size or CONFIG.defaultSize)
+        return
+    end
     if not border then
         border = CreateFrame("Frame", "ForeverSquareMinimapBorder", Minimap)
         border:SetAllPoints(Minimap)
@@ -772,5 +804,7 @@ ns.api = {
     ApplyInfos     = function() ns.Infos.Apply(); ns.Infos.Update() end,
     ApplyLook      = function() return ApplyLook() end,
     ApplyBorder    = function() return ApplyBorder() end,
+    -- Tests: how far the look reaches out of the drawn map.
+    Reach          = function() return Reach(ns.DB(), ns.ThemeArt.Art()) end,
     Config         = CONFIG,
 }

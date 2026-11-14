@@ -41,7 +41,9 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
 -- padding between map and border; tint = its colour; ornament = corner
 -- piece, corners = which ones (1 top left, 2 top right, 3 bottom left, 4
 -- bottom right), ornamentInset = how far in from the border's outer corner
--- (negative: further out); hardShadow = offset of a solid shadow.
+-- (never out: nothing reaches past Classic's edge); hardShadow = offset of
+-- a solid shadow. The map is drawn smaller by what all this reaches out
+-- further than Classic's border (SquareMinimap.lua, ThemeInset).
 Themes.SPECS = {
     CLASSIC = {},
     -- Oak boards round the map, a brass rim, brass rivets.
@@ -61,15 +63,15 @@ Themes.SPECS = {
     PARCHMENT = {
         font = "IM Fell English SC", bodyFont = "Friz Quadrata", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.29, 0.2, 0.12, 1 } },
-        art = { back = "ParchmentBack", tint = { 0.85, 0.82, 0.78, 1 }, padding = 5, ornament = "Seal", corners = { 3 }, ornamentSize = 22,
-            ornamentInset = -9 },
+        art = { back = "ParchmentBack", tint = { 0.85, 0.82, 0.78, 1 }, padding = 5, ornament = "Seal", corners = { 3 }, ornamentSize = 14,
+            ornamentInset = 0 },
     },
     -- Grey granite, a dark chiselled edge, glowing runes.
     RUNESTONE = {
         font = "Marcellus", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.1, 0.1, 0.12, 1 } },
-        art = { back = "StoneBack", padding = 6, ornament = "Rune", corners = { 1, 2 }, ornamentSize = 13,
-            ornamentInset = -2, ornamentColor = { 0.35, 0.95, 0.85, 1 } },
+        art = { back = "StoneBack", padding = 6, ornament = "Rune", corners = { 1, 2 }, ornamentSize = 10,
+            ornamentInset = 0, ornamentColor = { 0.35, 0.95, 0.85, 1 } },
     },
     -- A mosaic of coloured glass round the map, dark lead.
     GLASS = {
@@ -138,6 +140,13 @@ local function storedSets()
         sets.revision = Themes.REVISION
     end
     return sets
+end
+
+-- The stored Classic settings while a theme is in use (the defaults if none
+-- was stored); nil on Classic.
+function Themes.ClassicSet()
+    if Themes.Current() == Themes.CLASSIC then return nil end
+    return storedSets()[Themes.CLASSIC] or {}
 end
 
 -- The live settings as a set: the profile without the stored sets.

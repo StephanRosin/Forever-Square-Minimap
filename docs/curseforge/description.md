@@ -21,6 +21,7 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 ## Themes (beta)
 - Eight looks besides your own: **wooden plaque, technology / AI, parchment & seal, runestone, stained glass, comic, frost, pixel**. Each frames the map with its own backdrop, border and corner pieces and gives the zone name its font (free OFL fonts, shipped with the addon); clocks and coordinates stay in a readable font.
 - **Each theme keeps all its settings**: the first time you pick one it starts from your own setup with only the look on top; **Classic** is your setup as it was, always one click away.
+- A theme takes exactly the room your own border took: the map is drawn a few pixels smaller inside its frame, so windows lined up under it stay where they are.
 - **Take positions from** another theme (with undo) and **Reset theme**. Not in combat.
 
 ## Addon icons stay on the edge
