@@ -254,7 +254,7 @@ check("console: no rule", ns.ThemeArt.rule:IsShown(), false)
 Themes.SetColor("AMBER")
 check("console amber: the border in the accent", rgb(ring[1]._color), "1,0.69,0,1")
 Themes.SetColor("MINT")
-check("console mint: the border mint", rgb(ring[1]._color), "0.31,0.93,0.69,1")
+check("console mint: the border mint", rgb(ring[1]._color), "0.306,0.929,0.69,1")
 Themes.Switch("PITWALL")
 check("pitwall: red wedge top left", ornaments[1]:IsShown() and ornaments[1]._texture .. " " .. rgb(ornaments[1]._color), PATH .. "PitwallWedge 0.88,0.02,0,1")
 Themes.SetColor("ORANGE")
@@ -265,8 +265,8 @@ Themes.SetColor("RED")
 local RINGS = { TECH = "0.25,0.88,0.94,0.9", PARCHMENT = "0.29,0.2,0.12,1", RUNESTONE = "0.1,0.1,0.12,1",
     GLASS = "0.07,0.06,0.05,1", COMIC = "0.07,0.07,0.07,1", FROST = "0.86,0.96,1,0.8", PIXEL = "1,0.95,0.91,1",
     SWISS = "0.16,0.16,0.16,1", PITWALL = "0.043,0.047,0.055,1" }
-local OWN_RING = { CONSOLE = { MINT = "0.31,0.93,0.69,1", AMBER = "1,0.69,0,1", PHOSPHOR = "0.22,1,0.08,1",
-    VIOLET = "0.63,0.47,1,1" }, PIXEL = { HANDHELD = "0.78,0.94,0.44,1" } }
+local OWN_RING = { CONSOLE = { MINT = "0.306,0.929,0.69,1", AMBER = "1,0.69,0,1", PHOSPHOR = "0.224,1,0.078,1",
+    VIOLET = "0.627,0.471,1,1" }, PIXEL = { HANDHELD = "0.784,0.941,0.439,1" } }
 for _, id in ipairs(Themes.IDS) do
     if id ~= "CLASSIC" then
         Themes.Switch(id)
