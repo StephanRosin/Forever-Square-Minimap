@@ -57,6 +57,12 @@ local function themeSection()
           end,
           get = function() return Themes.Color() end,
           set = function(id) themeRefused(select(2, Themes.SetColor(id))) end },
+        { type = "buttons", visible = Themes.HasOthers, buttons = {
+            { label = "THEME_ALL", width = 240, onClick = function()
+                DEFAULT_CHAT_FRAME:AddMessage("|cffffd100" .. L.ADDON_NAME .. ":|r "
+                    .. L.THEME_ALL_DONE:format(Themes.ApplyToAll()))
+            end },
+        } },
         { type = "select", label = "THEME_COPY_FROM", hint = "HINT_THEME_COPY_FROM",
           choices = function()
               local stored = Themes.Stored()

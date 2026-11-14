@@ -625,6 +625,47 @@ ns.Themes.Switch("CLASSIC")
 ns.RefreshOptions()
 check("colours: hidden again", colourRow():IsShown(), false)
 
+-- "Apply to all Forever addons": only with another addon listed; puts it on
+-- this theme and colour, skips it when it lacks the theme.
+local function allButton()
+    for _, f in ipairs(M.frames) do
+        if f.text and f.text._text == ns.L.THEME_ALL then return f end
+    end
+end
+local function allRow()
+    for _, f in ipairs(M.frames) do
+        if f.buttons and f.buttons[1] == allButton() then return f end
+    end
+end
+check("apply all: hidden alone", allRow():IsShown(), false)
+local Themes = ns.Themes
+local pick = Themes.Colors("PIXEL")[2]
+local other, known = { theme = "CLASSIC" }, { CLASSIC = {}, PIXEL = { "NAVY", pick } }
+_G.ForeverThemes.FakeOther = {
+    title = "Fake", Current = function() return other.theme end,
+    Switch = function(id)
+        if not known[id] then return nil, "UNKNOWN" end
+        other.theme = id
+        return true
+    end,
+    Colors = function(theme) return known[theme] end,
+    SetColor = function(id) other.color = id; return true end,
+}
+ns.RefreshOptions()
+check("apply all: shown with another", allRow():IsShown(), true)
+Themes.Switch("PIXEL")
+Themes.SetColor(pick)
+M.chat = {}
+allButton():GetScript("OnClick")()
+check("apply all: theme and colour", other.theme .. " " .. tostring(other.color), "PIXEL " .. pick)
+check("apply all: says how many", (M.chat[1] or ""):find("1 other", 1, true) ~= nil, true)
+Themes.Switch("WOOD")
+check("apply all: unknown theme skipped", Themes.ApplyToAll() .. " " .. other.theme, "0 PIXEL")
+_G.ForeverThemes.FakeOther = nil
+Themes.SetColor(Themes.Colors("PIXEL")[1], "PIXEL")
+Themes.Switch("CLASSIC")
+ns.RefreshOptions()
+
 -- The options page follows a language change at once.
 local function shown(want)
     for _, fs in ipairs(M.fontStrings) do if fs._text == want then return true end end
