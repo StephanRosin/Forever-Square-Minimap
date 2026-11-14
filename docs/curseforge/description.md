@@ -19,11 +19,9 @@ A square minimap for **WoW: Forever**, without the round frame, the zoom buttons
 - Thickness from 1 to 8 pixels, sharp at any UI scale. Or no border at all.
 
 ## Themes (beta)
-- Eight looks besides your own: **wooden plaque, technology / AI, parchment & seal, runestone, stained glass, comic, frost, pixel**. Each frames the map with its own backdrop, border and corner pieces and gives the zone name its font (free OFL fonts, shipped with the addon); clocks and coordinates stay in a readable font.
-- **Each theme keeps all its settings**: the first time you pick one it starts from your own setup with only the look on top; **Classic** is your setup as it was, always one click away.
-- A theme takes exactly the room your own border took: the map is drawn a few pixels smaller inside its frame, so windows lined up under it stay where they are.
-- **Take positions from** another theme (with undo) and **Reset theme**. Not in combat.
-- **Apply to all Forever addons** puts the other Forever addons on the same theme and colour.
+Forever addons can now wear a shared look: Wood, Parchment, Tech, Runestone, Stained Glass, Comic, Frost, Pixel, Swiss Clean, Console and Pitwall, each with its own colour choices. Pick one in the options under Theme. It works on its own, but looks best when your other Forever addons wear the same theme — "Apply to all Forever addons" switches them in one click. Classic stays the default, and switching back to Classic always restores your previous settings exactly.
+
+A theme frames the map with its backdrop, border and corner pieces and gives the zone name its font; clocks and coordinates stay in a readable font. It takes exactly the room your own border took: the map is drawn a few pixels smaller inside its frame, so windows lined up under it stay where they are. Themes cannot be switched in combat. Each theme keeps all its settings of its own; the first time, it starts from your Classic settings. "Take positions from" copies the positions of another theme (with undo), "Reset theme" starts it anew from Classic. The theme fonts ship with the addon (SIL Open Font License).
 
 ## Addon icons stay on the edge
 - The addon tells other addons that the minimap is square (`GetMinimapShape`), so every LibDBIcon button (Questie, DBM, Details, WeakAuras, Bartender4, AtlasLoot, ...) sits on the square edge instead of a circle inside the map.
