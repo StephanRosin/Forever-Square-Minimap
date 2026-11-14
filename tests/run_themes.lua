@@ -196,6 +196,30 @@ check("registry: switched", entry.Current(), "FROST")
 check("registry: unknown", select(2, entry.Switch("NOPE")), "UNKNOWN")
 entry.Switch("CLASSIC")
 
+-- The comic's colours: the paper only (no accent here), outside the sets.
+local function paper() return table.concat(backs[1]._color, ",") end
+check("comic colours: list", table.concat(entry.ComicColors, ","), "GREY,YELLOW,BLUE,RED,GREEN,PURPLE")
+check("comic colours: grey by default", entry.ComicColor(), "GREY")
+Themes.Switch("COMIC")
+check("comic grey: paper as today", paper(), "0.7,0.7,0.7,1")
+checkTrue("comic blue: set", entry.SetComicColor("BLUE"))
+check("comic blue: paper", paper(), "0.45,0.6,0.86,1")
+check("comic colour: unknown refused", select(2, Themes.SetComicColor("NOPE")), "UNKNOWN")
+combat = true
+check("comic colour: combat refused under the comic", select(2, Themes.SetComicColor("RED")), "COMBAT")
+combat = false
+check("comic colour: in no profile", ns.DB().comicColor, nil)
+Themes.Switch("WOOD")
+checkTrue("comic colour: chosen under wood", Themes.SetComicColor("RED"))
+Themes.Switch("COMIC")
+check("comic colour: survives the switch", entry.ComicColor() .. " " .. paper(), "RED 0.86,0.44,0.4,1")
+ns.AccountDB().comicColor = "NOPE"
+check("comic colour: unknown stored reads grey", Themes.ComicColor(), "GREY")
+checkTrue("comic grey back: set", Themes.SetComicColor("GREY"))
+check("comic grey back: paper", paper(), "0.7,0.7,0.7,1")
+check("comic grey back: nothing stored", ns.AccountDB().comicColor, nil)
+Themes.Switch("CLASSIC")
+
 -- The sets go with a profile copy.
 Themes.Switch("WOOD")
 ns.SwitchProfile("Second")

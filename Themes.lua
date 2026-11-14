@@ -105,6 +105,19 @@ Themes.SPECS = {
 -- CLASSIC is never touched.
 Themes.REVISION = 2
 
+-- The comic's colours, the same in every Forever addon: the paper's tint
+-- (the minimap's comic has no yellow or red accent). Stored account wide,
+-- outside profiles and theme sets; GREY is the comic as it is.
+Themes.COMIC_COLORS = { "GREY", "YELLOW", "BLUE", "RED", "GREEN", "PURPLE" }
+local COMIC_PAPER = {
+    GREY = { 0.70, 0.70, 0.70 },
+    YELLOW = { 0.86, 0.76, 0.36 },
+    BLUE = { 0.45, 0.60, 0.86 },
+    RED = { 0.86, 0.44, 0.40 },
+    GREEN = { 0.50, 0.76, 0.46 },
+    PURPLE = { 0.70, 0.52, 0.84 },
+}
+
 -- The texts in the theme font; the others are body text (bodyFont).
 local DISPLAY = { zone = true }
 
@@ -183,6 +196,29 @@ end
 local function refuse()
     if InCombatLockdown and InCombatLockdown() then return "COMBAT" end
     return nil
+end
+
+-- The comic colour chosen; an unknown one stored reads as GREY.
+function Themes.ComicColor()
+    local id = ns.AccountDB().comicColor
+    return COMIC_PAPER[id] and id or "GREY"
+end
+
+-- The backdrop's tint (art: the theme's): the comic's paper in its colour.
+function Themes.Tint(art)
+    if Themes.Current() ~= "COMIC" or not art.tint then return art.tint end
+    local paper = COMIC_PAPER[Themes.ComicColor()]
+    return { paper[1], paper[2], paper[3], art.tint[4] }
+end
+
+-- Repaints at once under the comic (restyling, as Switch: not in combat).
+function Themes.SetComicColor(id)
+    if not COMIC_PAPER[id] then return nil, "UNKNOWN" end
+    local why = Themes.Current() == "COMIC" and refuse()
+    if why then return nil, why end
+    ns.AccountDB().comicColor = id ~= "GREY" and id or nil
+    if ns.api and ns.api.ApplyLook then ns.api.ApplyLook() end
+    return true
 end
 
 -- The set becomes the profile's settings, in place: the profile table stays
@@ -335,6 +371,13 @@ _G.ForeverThemes[ADDON] = {
     Current = function() return Themes.Current() end,
     Switch = function(id)
         local ok, why = Themes.Switch(id)
+        if ok and ns.RefreshOptions then ns.RefreshOptions() end
+        return ok, why
+    end,
+    ComicColors = Themes.COMIC_COLORS,
+    ComicColor = function() return Themes.ComicColor() end,
+    SetComicColor = function(id)
+        local ok, why = Themes.SetComicColor(id)
         if ok and ns.RefreshOptions then ns.RefreshOptions() end
         return ok, why
     end,
