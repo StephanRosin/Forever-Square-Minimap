@@ -287,12 +287,16 @@ local function hasFont(fs, path)
     return plain(got) == plain(path)
 end
 -- How often, and how far apart, a refused font is tried again.
-local FONT_RETRIES, FONT_RETRY_DELAY = 8, 0.25
+local FONT_RETRIES, FONT_RETRY_DELAY = 40, 0.25
 
 -- A font file used for the first time can leave a text blank although
 -- GetFont reports it (seen in game: empty texts until the theme was
 -- chosen a second time). Setting it again a little later, through another
 -- font, as that second choice did, draws them. Once per text and font.
+-- First use of a file can take seconds when many fonts load at once
+-- (theme switch); report each file only once.
+local refusedFonts = {}
+
 local REDRAW_DELAYS = { 0.5, 2 }
 local function redrawLater(fs, path, size, flags, wanted)
     if fs.fontDrawn == wanted then return end
@@ -322,7 +326,8 @@ local function setFont(fs, path, size, flags, retries)
             -- Restyled since: that call has its own tries.
             if fs.fontWanted == wanted then setFont(fs, path, size, flags, retries - 1) end
         end)
-    elseif DEFAULT_CHAT_FRAME then
+    elseif DEFAULT_CHAT_FRAME and not refusedFonts[path] then
+        refusedFonts[path] = true
         DEFAULT_CHAT_FRAME:AddMessage("|cff70c0ff" .. L.ADDON_NAME .. ":|r " .. L.MSG_FONT_REFUSED:format(path))
     end
 end
