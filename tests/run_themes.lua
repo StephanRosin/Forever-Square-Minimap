@@ -198,7 +198,7 @@ entry.Switch("CLASSIC")
 
 -- The comic's colours: the paper only (no accent here), outside the sets.
 local function paper() return table.concat(backs[1]._color, ",") end
-check("comic colours: list", table.concat(entry.ComicColors, ","), "GREY,YELLOW,BLUE,RED,GREEN,PURPLE")
+check("comic colours: list", table.concat(entry.ComicColors, ","), "GREY,DARKGREY,BLACK,WHITE,YELLOW,BLUE,RED,GREEN,PURPLE")
 check("comic colours: grey by default", entry.ComicColor(), "GREY")
 Themes.Switch("COMIC")
 check("comic grey: paper as today", paper(), "0.7,0.7,0.7,1")
@@ -213,6 +213,10 @@ Themes.Switch("WOOD")
 checkTrue("comic colour: chosen under wood", Themes.SetComicColor("RED"))
 Themes.Switch("COMIC")
 check("comic colour: survives the switch", entry.ComicColor() .. " " .. paper(), "RED 0.86,0.44,0.4,1")
+checkTrue("comic black: set", Themes.SetComicColor("BLACK"))
+check("comic black: paper", paper(), "0.16,0.16,0.16,1")
+checkTrue("comic white: set", Themes.SetComicColor("WHITE"))
+check("comic white: paper", paper(), "1,1,1,1")
 ns.AccountDB().comicColor = "NOPE"
 check("comic colour: unknown stored reads grey", Themes.ComicColor(), "GREY")
 checkTrue("comic grey back: set", Themes.SetComicColor("GREY"))
