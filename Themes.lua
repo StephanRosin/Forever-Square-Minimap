@@ -51,12 +51,11 @@ Themes.SPECS = {
         art = { back = "WoodBack", padding = 5, ornament = "Rivet", corners = { 1, 2, 3, 4 }, ornamentSize = 10,
             ornamentInset = 0 },
     },
-    -- Dark navy with a faint grid, a thin cyan line, corner brackets.
+    -- Dark navy with a faint grid, a thin cyan line.
     TECH = {
         font = "Space Grotesk",
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.25, 0.88, 0.94, 0.9 } },
-        art = { back = "TechBack", padding = 4, ornament = "Bracket", corners = { 1, 2, 3, 4 }, ornamentSize = 14,
-            ornamentInset = -3, ornamentColor = { 0.25, 0.88, 0.94, 1 } },
+        art = { back = "TechBack", padding = 4 },
     },
     -- Parchment round the map, a brown ink line, a wax seal.
     PARCHMENT = {
@@ -78,11 +77,12 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.06, 0.05, 1 } },
         art = { back = "GlassBack", padding = 7 },
     },
-    -- Thick ink line, halftone paper, a solid shadow.
+    -- Thick ink line, halftone paper (grey as in the other Forever addons),
+    -- a solid shadow.
     COMIC = {
         font = "Bangers", bodyFont = "Friz Quadrata", fontSizeAdd = 2, outline = "THICKOUTLINE",
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.07, 0.07, 1 } },
-        art = { back = "ComicBack", tint = { 0.9, 0.87, 0.8, 1 }, padding = 3, hardShadow = 5 },
+        art = { back = "ComicBack", tint = { 0.7, 0.7, 0.7, 1 }, padding = 3, hardShadow = 5 },
     },
     -- Translucent ice, quieted (its cracks are busy), a pale rim.
     FROST = {

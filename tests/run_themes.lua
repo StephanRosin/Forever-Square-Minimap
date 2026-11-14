@@ -134,6 +134,15 @@ for id, spec in pairs(Themes.SPECS) do
 end
 Themes.Switch("CLASSIC")
 
+-- Tech without corner pieces; comic paper as in the other Forever addons.
+Themes.Switch("TECH")
+check("tech: no ornaments", ornaments[1]:IsShown() or ornaments[4]:IsShown(), false)
+check("tech: backdrop", backs[1]:IsShown(), true)
+Themes.Switch("COMIC")
+check("comic: paper grey", backs[1]._color[1], 0.7)
+check("comic: paper opaque", backs[1]._color[4], 1)
+Themes.Switch("CLASSIC")
+
 -- Refused.
 combat = true
 check("combat: switch", select(2, Themes.Switch("TECH")), "COMBAT")
@@ -144,9 +153,9 @@ check("unknown", select(2, Themes.Switch("NOPE")), "UNKNOWN")
 
 -- A non-Latin client keeps its font, gets the rest of the look.
 M.locale = "ruRU"
-Themes.Switch("TECH")
+Themes.Switch("RUNESTONE")
 check("ruRU: own font kept", Infos.Get("zone", "font"), "Friz Quadrata")
-check("ruRU: theme border", db.borderSize, 1)
+check("ruRU: theme border", db.borderColor[1], 0.1)
 M.locale = "enUS"
 Themes.Switch("CLASSIC")
 
