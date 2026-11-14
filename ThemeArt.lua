@@ -69,7 +69,7 @@ local function placeBack(a, p)
     strip(backs[4], p, s, 0, s + p, s)      -- right
     local tint = ns.Themes.Tint(a) or { 1, 1, 1, 1 }
     for i = 1, 4 do
-        backs[i]:SetTexture(PATH .. a.back, "REPEAT", "REPEAT")
+        backs[i]:SetTexture(PATH .. ns.Themes.Back(a), "REPEAT", "REPEAT")
         backs[i]:SetVertexColor(tint[1], tint[2], tint[3], tint[4])
     end
 end

@@ -610,6 +610,21 @@ check("mail page shown", M.byName["ForeverSquareMinimapPage5"]:IsShown(), true)
 check("the first one hidden", M.byName["ForeverSquareMinimapPage1"]:IsShown(), false)
 ns.Window.ShowPage(1)
 
+-- The theme's colours: one list, the current theme's; none under Classic.
+local function colourRow()
+    for _, f in ipairs(M.frames) do
+        if f.opts and f.label and f.label._text == ns.L.OPT_THEME_COLOR then return f end
+    end
+end
+check("colours: hidden under classic", colourRow():IsShown(), false)
+ns.Themes.Switch("WOOD")
+ns.RefreshOptions()
+local items = colourRow().opts.items()
+check("colours: wood's own", tostring(colourRow():IsShown()) .. " " .. #items .. " " .. items[1].text, "true 6 " .. ns.L.THEME_COLOR_WOOD_OAK)
+ns.Themes.Switch("CLASSIC")
+ns.RefreshOptions()
+check("colours: hidden again", colourRow():IsShown(), false)
+
 -- The options page follows a language change at once.
 local function shown(want)
     for _, fs in ipairs(M.fontStrings) do if fs._text == want then return true end end

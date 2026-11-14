@@ -148,13 +148,26 @@ local function pageFor(i)
     local page = CreateFrame("Frame", "ForeverSquareMinimapPage" .. i, frame.scrollChild)
     page:SetPoint("TOPLEFT", frame.scrollChild, "TOPLEFT", 0, 0)
     page:SetWidth(CONTENT_W)
-    local stack = newStack(page)
-    for _, opt in ipairs(ps.rows) do
+    local built = {}
+    for i, opt in ipairs(ps.rows) do
         local row, height = widgetFor(page, opt)
-        stack.add(row, height)
+        built[i] = { row = row, height = height, visible = opt.visible }
     end
-    page.rows, page.height = stack.rows, stack.y + PAGE_BOTTOM
-    page:SetHeight(page.height)
+    -- A row with `visible` comes and goes: the page is stacked anew.
+    page.relayout = function()
+        local stack = newStack(page)
+        for _, b in ipairs(built) do
+            local shown = not b.visible or b.visible()
+            b.row:SetShown(shown)
+            if shown then
+                b.row:ClearAllPoints()
+                stack.add(b.row, b.height)
+            end
+        end
+        page.rows, page.height = stack.rows, stack.y + PAGE_BOTTOM
+        page:SetHeight(page.height)
+    end
+    page.relayout()
     page:Hide()
     pages[i] = page
     return page
@@ -368,7 +381,11 @@ end
 -- Fetches every value on the visible page again.
 function Window.Refresh()
     if not frame or not current or not pages[current] then return end
-    for _, row in ipairs(pages[current].rows) do row:Refresh() end
+    local page = pages[current]
+    page.relayout()
+    frame.scrollChild:SetHeight(page.height)
+    updateScrollbar()
+    for _, row in ipairs(page.rows) do row:Refresh() end
     if frame.languageRow then frame.languageRow:Refresh() end
 end
 ns.RefreshOptions = Window.Refresh

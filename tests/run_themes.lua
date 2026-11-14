@@ -196,32 +196,55 @@ check("registry: switched", entry.Current(), "FROST")
 check("registry: unknown", select(2, entry.Switch("NOPE")), "UNKNOWN")
 entry.Switch("CLASSIC")
 
--- The comic's colours: the paper only (no accent here), outside the sets.
+-- Every theme's colours: the backdrop only (no accent here), outside the sets.
+local PATH = "Interface\\AddOns\\ForeverSquareMinimap\\Media\\Themes\\"
+local function rgb(t) return table.concat({ t[1], t[2], t[3], t[4] }, ",") end
 local function paper() return table.concat(backs[1]._color, ",") end
-check("comic colours: list", table.concat(entry.ComicColors, ","), "GREY,DARKGREY,BLACK,WHITE,YELLOW,BLUE,RED,GREEN,PURPLE")
-check("comic colours: grey by default", entry.ComicColor(), "GREY")
+local function look() return backs[1]._texture .. " " .. paper() end
+check("colours: none under classic", #entry.Colors() .. tostring(entry.Color()), "0nil")
+check("colours: comic list", table.concat(entry.Colors("COMIC"), ","), "GREY,DARKGREY,BLACK,WHITE,YELLOW,BLUE,RED,GREEN,PURPLE")
+for _, id in ipairs(Themes.IDS) do
+    local art = Themes.SPECS[id].art
+    if id ~= "CLASSIC" and art and art.back then
+        Themes.Switch(id)
+        local colours = entry.Colors()
+        check(id .. ": the first colour by default", entry.Color(), colours[1])
+        check(id .. ": default as today", look(), PATH .. art.back .. " " .. rgb(art.tint or { 1, 1, 1, 1 }))
+        for _, c in ipairs(colours) do
+            checkTrue(id .. " " .. c .. ": named", ns.L["THEME_COLOR_" .. id .. "_" .. c] ~= "THEME_COLOR_" .. id .. "_" .. c)
+        end
+    end
+end
+Themes.Switch("PIXEL")
+checkTrue("pixel plum: set", entry.SetColor("PLUM"))
+check("pixel plum: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.23 / 0.8, 0.08 / 0.8, 0.16 / 0.8, 1 }))
+check("colour: another theme's id refused", select(2, Themes.SetColor("OAK")), "UNKNOWN")
+combat = true
+check("colour: combat refused for the theme in use", select(2, Themes.SetColor("NAVY")), "COMBAT")
+checkTrue("colour: a theme not in use in combat", Themes.SetColor("DEEP", "FROST"))
+combat = false
+check("colour: in no profile", ns.DB().themeColors, nil)
 Themes.Switch("COMIC")
 check("comic grey: paper as today", paper(), "0.7,0.7,0.7,1")
-checkTrue("comic blue: set", entry.SetComicColor("BLUE"))
+checkTrue("comic blue: set", entry.SetColor("BLUE"))
 check("comic blue: paper", paper(), "0.45,0.6,0.86,1")
-check("comic colour: unknown refused", select(2, Themes.SetComicColor("NOPE")), "UNKNOWN")
-combat = true
-check("comic colour: combat refused under the comic", select(2, Themes.SetComicColor("RED")), "COMBAT")
-combat = false
-check("comic colour: in no profile", ns.DB().comicColor, nil)
-Themes.Switch("WOOD")
-checkTrue("comic colour: chosen under wood", Themes.SetComicColor("RED"))
+check("colour: unknown refused", select(2, Themes.SetColor("NOPE")), "UNKNOWN")
+Themes.Switch("PIXEL")
+check("colours: each theme its own", entry.Color() .. " " .. entry.Color("COMIC") .. " " .. entry.Color("FROST"), "PLUM BLUE DEEP")
+Themes.SetColor("NAVY")
+check("pixel navy: as today again", look(), PATH .. "PixelBack 1,1,1,1")
+Themes.SetColor("ICE", "FROST")
 Themes.Switch("COMIC")
-check("comic colour: survives the switch", entry.ComicColor() .. " " .. paper(), "RED 0.86,0.44,0.4,1")
-checkTrue("comic black: set", Themes.SetComicColor("BLACK"))
-check("comic black: paper", paper(), "0.16,0.16,0.16,1")
-checkTrue("comic white: set", Themes.SetComicColor("WHITE"))
-check("comic white: paper", paper(), "1,1,1,1")
-ns.AccountDB().comicColor = "NOPE"
-check("comic colour: unknown stored reads grey", Themes.ComicColor(), "GREY")
-checkTrue("comic grey back: set", Themes.SetComicColor("GREY"))
-check("comic grey back: paper", paper(), "0.7,0.7,0.7,1")
-check("comic grey back: nothing stored", ns.AccountDB().comicColor, nil)
+ns.AccountDB().themeColors.COMIC = "NOPE"
+check("colour: unknown stored reads the first", Themes.Color(), "GREY")
+-- The comic colour of before moves in once.
+ns.AccountDB().themeColors.COMIC = nil
+ns.AccountDB().comicColor = "RED"
+check("migration: comic colour moved", entry.Color("COMIC") .. " " .. tostring(ns.AccountDB().comicColor), "RED nil")
+ns.AccountDB().comicColor = "BLUE"
+check("migration: a colour already set wins", entry.Color("COMIC"), "RED")
+checkTrue("comic grey back: set", Themes.SetColor("GREY"))
+check("comic grey back: nothing stored", next(ns.AccountDB().themeColors), nil)
 Themes.Switch("CLASSIC")
 
 -- The sets go with a profile copy.

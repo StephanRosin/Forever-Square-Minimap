@@ -45,15 +45,18 @@ local function themeSection()
               -- Every value on the page belongs to the theme.
               if ok then ns.RefreshOptions() end
           end },
-        -- The comic's colour, kept apart from the theme sets.
-        { type = "select", label = "OPT_THEME_COMIC_COLOR",
+        -- The current theme's colours, kept apart from the theme sets.
+        { type = "select", label = "OPT_THEME_COLOR",
+          visible = function() return #Themes.Colors() > 0 end,
           choices = function()
-              local list = {}
-              for _, id in ipairs(Themes.COMIC_COLORS) do list[#list + 1] = { value = id, label = L["COMIC_COLOR_" .. id] } end
+              local theme, list = Themes.Current(), {}
+              for _, id in ipairs(Themes.Colors()) do
+                  list[#list + 1] = { value = id, label = L["THEME_COLOR_" .. theme .. "_" .. id] }
+              end
               return list
           end,
-          get = function() return Themes.ComicColor() end,
-          set = function(id) themeRefused(select(2, Themes.SetComicColor(id))) end },
+          get = function() return Themes.Color() end,
+          set = function(id) themeRefused(select(2, Themes.SetColor(id))) end },
         { type = "select", label = "THEME_COPY_FROM", hint = "HINT_THEME_COPY_FROM",
           choices = function()
               local stored = Themes.Stored()
