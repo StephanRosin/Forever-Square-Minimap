@@ -257,6 +257,10 @@ Themes.SetColor("MINT")
 check("console mint: the border mint", rgb(ring[1]._color), "0.306,0.929,0.69,1")
 Themes.Switch("PITWALL")
 check("pitwall: red wedge top left", ornaments[1]:IsShown() and ornaments[1]._texture .. " " .. rgb(ornaments[1]._color), PATH .. "PitwallWedge 0.88,0.02,0,1")
+-- The family's wedge: no title row, so the Combat Meter strip's 24, as wide
+-- as high, the texture's left 0.53, flush inside the hairline.
+check("pitwall: wedge 24 high, as wide as high", ornaments[1]:GetHeight() .. "x" .. ornaments[1]:GetWidth(), "24x24")
+check("pitwall: the texture's left part", table.concat(ornaments[1]._coords, ","), "0,0.53,0,1")
 Themes.SetColor("ORANGE")
 check("pitwall orange: the wedge's colour", rgb(ornaments[1]._color), "1,0.54,0,1")
 Themes.SetColor("RED")
