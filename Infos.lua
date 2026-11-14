@@ -283,11 +283,33 @@ end
 -- How often, and how far apart, a refused font is tried again.
 local FONT_RETRIES, FONT_RETRY_DELAY = 8, 0.25
 
+-- A font file used for the first time can leave a text blank although
+-- GetFont reports it (seen in game: empty texts until the theme was
+-- chosen a second time). Setting it again a little later, through another
+-- font, as that second choice did, draws them. Once per text and font.
+local REDRAW_DELAYS = { 0.5, 2 }
+local function redrawLater(fs, path, size, flags, wanted)
+    if fs.fontDrawn == wanted then return end
+    fs.fontDrawn = wanted
+    for _, delay in ipairs(REDRAW_DELAYS) do
+        C_Timer.After(delay, function()
+            if fs.fontWanted ~= wanted then return end
+            fs:SetFont("Fonts\\FRIZQT__.TTF", size, flags)
+            fs:SetFont(path, size, flags)
+            local text = fs:GetText()
+            if text then fs:SetText(""); fs:SetText(text) end
+        end)
+    end
+end
+
 local function setFont(fs, path, size, flags, retries)
     fs:SetFont(path, size, flags)
     local wanted = path .. "|" .. size .. "|" .. flags
     fs.fontWanted = wanted
-    if hasFont(fs, path) then return end
+    if hasFont(fs, path) then
+        redrawLater(fs, path, size, flags, wanted)
+        return
+    end
     retries = retries or FONT_RETRIES
     if retries > 0 then
         C_Timer.After(FONT_RETRY_DELAY, function()
