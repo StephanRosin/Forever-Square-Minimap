@@ -91,8 +91,7 @@ local function placeShadow(a, extent)
     for i = 1, 2 do shadows[i]:SetColorTexture(0, 0, 0, 1) end
 end
 
--- Ornaments at the border's outer corners, ornamentInset inwards; of the
--- texture only its left ornamentPart (default all of it).
+-- Ornaments at the border's outer corners, ornamentInset inwards.
 local function placeOrnaments(a, extent)
     local wanted = {}
     for _, i in ipairs(a.ornament and a.corners or {}) do wanted[i] = true end
@@ -108,8 +107,7 @@ local function placeOrnaments(a, extent)
             piece:SetPoint(point, Minimap, point, dx, dy)
             piece:SetSize(size, size)
             piece:SetTexture(PATH .. a.ornament)
-            local m, part = MIRROR[i], a.ornamentPart or 1
-            piece:SetTexCoord(m[1] * part, m[2] * part, m[3], m[4])
+            piece:SetTexCoord(unpack(MIRROR[i]))
             piece:SetVertexColor(c[1], c[2], c[3], c[4])
         end
     end

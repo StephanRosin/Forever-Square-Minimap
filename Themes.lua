@@ -112,14 +112,12 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.306, 0.929, 0.69, 1 } },
         art = { back = "ConsoleBack", padding = 4 },
     },
-    -- A timing screen: flat black, a carbon hairline, a red wedge at the top left,
-    -- inside the hairline: the family's wedge (the texture's left 0.53, as wide as
-    -- high) as high as the Combat Meter's title strip, the map having no title row.
+    -- A timing screen: flat black, a carbon hairline. No wedge: the map has no
+    -- title row, and its top-left corner is the mail icon's.
     PITWALL = {
         font = "Titillium Web Bold Italic", bodyFont = "Titillium Web",
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.043, 0.047, 0.055, 1 } },
-        art = { back = "SwissBack", padding = 4, ornament = "PitwallWedge", corners = { 1 }, ornamentSize = 24,
-            ornamentPart = 0.53, ornamentInset = 1, ornamentColor = { 0.88, 0.02, 0, 1 } },
+        art = { back = "SwissBack", padding = 4 },
     },
 }
 
