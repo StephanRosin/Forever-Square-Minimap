@@ -30,8 +30,11 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
     ptBR = true }
 
 -- look: settings the theme sets (the border, SquareMinimap.lua). font: the
--- font of every text (Infos.FONTS), fontSizeAdd: how much larger it must be
--- to read like the others. outline: the texts' outline flags; always the
+-- font of the display text (the zone name, DISPLAY), fontSizeAdd: how much
+-- larger it must be to read like the others. bodyFont: the font of the other
+-- texts (clocks, FPS/ms, coordinates) where the theme font is unreadable at
+-- small sizes (old-style figures, small caps, heavy letters); they keep the
+-- player's size then. nil: the theme font. outline: the texts' outline flags; always the
 -- client's own, never copies of the text behind it (with the theme fonts
 -- those showed black text in Forever Unit Frames).
 -- art (ThemeArt.lua): back = backdrop file in Media/Themes, shown in the
@@ -57,9 +60,9 @@ Themes.SPECS = {
     },
     -- Parchment round the map, a brown ink line, a wax seal.
     PARCHMENT = {
-        font = "IM Fell English SC", fontSizeAdd = 1,
+        font = "IM Fell English SC", bodyFont = "Friz Quadrata", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.29, 0.2, 0.12, 1 } },
-        art = { back = "ParchmentBack", padding = 5, ornament = "Seal", corners = { 3 }, ornamentSize = 22,
+        art = { back = "ParchmentBack", tint = { 0.85, 0.82, 0.78, 1 }, padding = 5, ornament = "Seal", corners = { 3 }, ornamentSize = 22,
             ornamentInset = -9 },
     },
     -- Grey granite, a dark chiselled edge, glowing runes.
@@ -71,25 +74,25 @@ Themes.SPECS = {
     },
     -- A mosaic of coloured glass round the map, dark lead.
     GLASS = {
-        font = "Morpheus", fontSizeAdd = 1,
+        font = "Morpheus", bodyFont = "Friz Quadrata", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.06, 0.05, 1 } },
         art = { back = "GlassBack", padding = 7 },
     },
     -- Thick ink line, halftone paper, a solid shadow.
     COMIC = {
-        font = "Bangers", fontSizeAdd = 2, outline = "THICKOUTLINE",
+        font = "Bangers", bodyFont = "Friz Quadrata", fontSizeAdd = 2, outline = "THICKOUTLINE",
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.07, 0.07, 1 } },
-        art = { back = "ComicBack", padding = 3, hardShadow = 5 },
+        art = { back = "ComicBack", tint = { 0.9, 0.87, 0.8, 1 }, padding = 3, hardShadow = 5 },
     },
-    -- Translucent ice, a pale rim.
+    -- Translucent ice, quieted (its cracks are busy), a pale rim.
     FROST = {
-        font = "Cormorant SC", fontSizeAdd = 2,
+        font = "Cormorant SC", bodyFont = "Friz Quadrata", fontSizeAdd = 2,
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.86, 0.96, 1, 0.8 } },
-        art = { back = "FrostBack", padding = 3, tint = { 1, 1, 1, 0.75 } },
+        art = { back = "FrostBack", padding = 3, tint = { 0.6, 0.66, 0.72, 0.75 } },
     },
     -- A light pixel frame, scan lines, a solid shadow.
     PIXEL = {
-        font = "VT323", fontSizeAdd = 4, outline = "OUTLINE, MONOCHROME",
+        font = "VT323", fontSizeAdd = 4,
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 1, 0.95, 0.91, 1 } },
         art = { back = "PixelBack", padding = 3, hardShadow = 4 },
     },
@@ -98,7 +101,10 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 1
+Themes.REVISION = 2
+
+-- The texts in the theme font; the others are body text (bodyFont).
+local DISPLAY = { zone = true }
 
 local function copy(v)
     if type(v) ~= "table" then return v end
@@ -148,12 +154,13 @@ local function seed(id, base)
     p.themeSets = nil
     for key, value in pairs(spec.look or {}) do p[key] = copy(value) end
     local latin = spec.font and LATIN_CLIENTS[GetLocale()]
-    local add = spec.fontSizeAdd or 0
     p.infos = p.infos or {}
     for _, kind in ipairs(ns.Infos.KINDS) do
         local own = p.infos[kind] or {}
         p.infos[kind] = own
-        if latin then own.font = spec.font end
+        local font, add = spec.font, spec.fontSizeAdd or 0
+        if not DISPLAY[kind] and spec.bodyFont then font, add = spec.bodyFont, 0 end
+        if latin then own.font = font end
         local size = own.size
         if size == nil then size = ns.Infos.DEFAULTS[kind].size end
         -- 0 is "Auto": the game font's size, left alone.

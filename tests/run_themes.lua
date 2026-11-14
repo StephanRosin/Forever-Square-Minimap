@@ -84,7 +84,8 @@ check("pixel: from classic, not from wood", db.offsetX, -40)
 check("pixel: font larger", Infos.Get("zone", "size"), 17)
 check("pixel: auto size stays auto", Infos.Get("coords", "size"), 0)
 check("pixel: a default size grows too", Infos.Get("server", "size"), 15)
-check("pixel: its outline", Infos.texts.zone._font[3], "OUTLINE, MONOCHROME")
+check("pixel: the client's outline", Infos.texts.zone._font[3], "OUTLINE")
+check("pixel: body text in the theme font", Infos.Get("server", "font"), "VT323")
 check("pixel: solid shadow", shadows[1]:IsShown(), true)
 check("pixel: two to copy from", #Themes.Stored(), 2)
 
@@ -117,6 +118,21 @@ check("reset: from classic", db.offsetX, -40)
 check("reset: still wood", Themes.Current(), "WOOD")
 Themes.Switch("CLASSIC")
 check("reset: not classic", select(2, Themes.Reset()), "CLASSIC")
+
+-- Body text in a readable font where the theme font is not: the zone name
+-- is display text, clocks, FPS/ms and coordinates are body text.
+checkTrue("parchment", Themes.Switch("PARCHMENT"))
+check("parchment: zone in the theme font", Infos.Get("zone", "font"), "IM Fell English SC")
+check("parchment: zone larger", Infos.Get("zone", "size"), 14)
+check("parchment: clock in the standard font", Infos.Get("server", "font"), "Friz Quadrata")
+check("parchment: clock keeps its size", Infos.Get("server", "size"), 11)
+check("parchment: coordinates in the standard font", Infos.Get("coords", "font"), "Friz Quadrata")
+for id, spec in pairs(Themes.SPECS) do
+    local body = ({ PARCHMENT = true, FROST = true, GLASS = true, COMIC = true })[id]
+    check("body font of " .. id, spec.bodyFont, body and "Friz Quadrata" or nil)
+    check("no bare monochrome in " .. id, (spec.outline or ""):find("MONOCHROME") == nil, true)
+end
+Themes.Switch("CLASSIC")
 
 -- Refused.
 combat = true
@@ -174,7 +190,7 @@ Themes.Switch("CLASSIC")
 -- A theme stored under an older revision is made anew; Classic stays.
 ForeverSquareMinimapProfiles = { profiles = { Default = {
     theme = "WOOD", borderStyle = "NONE", size = 280, offsetX = 3,
-    themeSets = { revision = 0, CLASSIC = { size = 280, offsetX = 3, borderStyle = "GOLD" },
+    themeSets = { revision = 1, CLASSIC = { size = 280, offsetX = 3, borderStyle = "GOLD" },
         TECH = { theme = "TECH", offsetX = 99 } },
 } } }
 ForeverSquareMinimapChar = { active = "Default" }
@@ -186,7 +202,7 @@ check("upgrade: still wood", db.theme, "WOOD")
 check("upgrade: from classic", db.offsetX, 3)
 check("upgrade: stale set dropped", db.themeSets.TECH, nil)
 check("upgrade: classic kept", db.themeSets.CLASSIC.borderStyle, "GOLD")
-check("upgrade: revision noted", db.themeSets.revision, ns.Themes.REVISION)
+check("upgrade: revision noted", db.themeSets.revision, 2)
 db.borderSize = 6
 ns.Themes.Upgrade()
 check("upgrade: once only", db.borderSize, 6)
