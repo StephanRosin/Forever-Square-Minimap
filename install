@@ -8,8 +8,10 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 TARGET="$DEST/ForeverSquareMinimap"
 rm -rf "$TARGET"
 mkdir -p "$TARGET"
-# Files listed in the TOC plus the TOC itself; nothing else ships.
+# Files listed in the TOC, the TOC itself and the media (theme fonts with
+# their licences, theme textures); nothing else ships.
 cp "$HERE/ForeverSquareMinimap.toc" "$TARGET/"
+cp -r "$HERE/Media" "$TARGET/"
 grep -v '^\s*#' "$HERE/ForeverSquareMinimap.toc" | grep -v '^\s*$' | tr -d '\r' | while read -r f; do
     f="${f//\\//}"
     mkdir -p "$TARGET/$(dirname "$f")"

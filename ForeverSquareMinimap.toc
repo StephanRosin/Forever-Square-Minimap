@@ -27,6 +27,8 @@ DayNight.lua
 Compartment.lua
 Fade.lua
 PlayerArrow.lua
+Themes.lua
+ThemeArt.lua
 SquareMinimap.lua
 Options\Style.lua
 Options\Widgets.lua

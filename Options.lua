@@ -17,6 +17,68 @@ local function switchProfile(name)
     ns.RefreshOptions()
 end
 
+-- The theme (Themes.lua, beta): the choice, "Take positions from" another
+-- theme (with undo until the theme changes or /reload), and a reset.
+local Themes = ns.Themes
+local PICK, UNDO = "__pick", "__undo"
+local themeUndo
+
+local function themeRefused(why)
+    if why and DEFAULT_CHAT_FRAME then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffffd100" .. L.ADDON_NAME .. ":|r " .. L["THEME_REFUSED_" .. why])
+    end
+end
+
+local function themeSection()
+    return {
+        { type = "header", label = "SECTION_THEME" },
+        { type = "select", label = "OPT_THEME", hint = "HINT_THEME",
+          choices = function()
+              local list = {}
+              for _, id in ipairs(Themes.IDS) do list[#list + 1] = { value = id, label = L["THEME_" .. id] } end
+              return list
+          end,
+          get = function() return Themes.Current() end,
+          set = function(id)
+              local ok, why = Themes.Switch(id)
+              themeRefused(why)
+              -- Every value on the page belongs to the theme.
+              if ok then ns.RefreshOptions() end
+          end },
+        { type = "select", label = "THEME_COPY_FROM", hint = "HINT_THEME_COPY_FROM",
+          choices = function()
+              local stored = Themes.Stored()
+              local undo = themeUndo and themeUndo.theme == Themes.Current()
+              local list = { { value = PICK,
+                  label = (#stored == 0 and not undo) and L.THEME_COPY_NONE or L.THEME_COPY_PICK } }
+              if undo then list[#list + 1] = { value = UNDO, label = L.THEME_COPY_UNDO } end
+              for _, id in ipairs(stored) do list[#list + 1] = { value = id, label = L["THEME_" .. id] } end
+              return list
+          end,
+          get = function() return PICK end,
+          set = function(v)
+              if v == PICK then return end
+              if v == UNDO then
+                  local ok, why = Themes.Restore(themeUndo.saved)
+                  themeRefused(why)
+                  if ok then themeUndo = nil end
+              else
+                  local saved, why = Themes.CopyPlacement(v)
+                  themeRefused(why)
+                  if saved then themeUndo = { theme = Themes.Current(), saved = saved } end
+              end
+              ns.RefreshOptions()
+          end },
+        { type = "buttons", buttons = {
+            { label = "THEME_RESET", width = 150, onClick = function()
+                local ok, why = Themes.Reset()
+                themeRefused(why)
+                if ok then ns.RefreshOptions() end
+            end },
+        } },
+    }
+end
+
 -- One section per text (Infos.lua): on/off, what it hangs from, its
 -- points and offset, font and size; FPS and latency also their arrangement.
 local Infos = ns.Infos
@@ -127,8 +189,9 @@ end
 
 local function generalTab()
     local Button = ns.MinimapButton
-    local items = {
-        { type = "tab", label = "TAB_GENERAL" },
+    local items = { { type = "tab", label = "TAB_GENERAL" } }
+    add(items, themeSection())
+    add(items, {
         {
             type = "select",
             label = "OPT_LANGUAGE",
@@ -143,7 +206,7 @@ local function generalTab()
         { type = "header", label = "OPT_BUTTON" },
         { type = "check", label = "OPT_BUTTON_SHOW",
           get = function() return Button.Get("show") end, set = function(v) Button.Set("show", v) end },
-    }
+    })
     add(items, fadeSection())
     add(items, {
         { type = "header", label = "OPT_PROFILE" },

@@ -93,7 +93,7 @@ local function widgetFor(page, opt)
     elseif kind == "buttons" then
         return buttonsRow(page, opt)
     end
-    local o = { label = labelText(opt.label), get = opt.get, set = opt.set }
+    local o = { label = labelText(opt.label), hint = opt.hint and labelText(opt.hint), get = opt.get, set = opt.set }
     if kind == "check" then return Widgets.Checkbox(page, o) end
     if kind == "select" then
         o.items = function()

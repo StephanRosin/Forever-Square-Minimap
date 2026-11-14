@@ -13,6 +13,7 @@ outline.
 -----------------------------------------------------------------------------]]
 
 local ADDON, ns = ...
+local L = ns.L
 
 local Infos = {}
 ns.Infos = Infos
@@ -51,6 +52,32 @@ Infos.FONTS = {
     { key = "Skurri", path = "Fonts\\SKURRI.TTF" },
     { key = "Morpheus", path = "Fonts\\MORPHEUS.TTF" },
 }
+
+-- The themes' fonts (Themes.lua), shipped in Media/Fonts with their
+-- licences; Latin letters only.
+local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Fonts\\"
+for _, f in ipairs({
+    { key = "Bangers", file = "Bangers-Regular.ttf" },
+    { key = "Cinzel", file = "Cinzel-Bold.ttf" },
+    { key = "Cormorant SC", file = "CormorantSC-Bold.ttf" },
+    { key = "IM Fell English SC", file = "IMFeENsc28P.ttf" },
+    { key = "Marcellus", file = "Marcellus-Regular.ttf" },
+    { key = "Space Grotesk", file = "SpaceGrotesk-Bold.ttf" },
+    { key = "VT323", file = "VT323-Regular.ttf" },
+}) do
+    Infos.FONTS[#Infos.FONTS + 1] = { key = f.key, path = MEDIA .. f.file }
+end
+
+-- Our own font files loaded while the addon loads: a file used for the
+-- first time can be refused (setFont tries again), so the first restyle
+-- should not be its first use.
+do
+    local preload = CreateFrame("Frame")
+    preload:Hide()
+    for _, f in ipairs(Infos.FONTS) do
+        if f.path and f.path:find(MEDIA, 1, true) then preload:CreateFontString():SetFont(f.path, 12, "") end
+    end
+end
 
 -- The choices for the font dropdown: key and path of every font.
 function Infos.FontList()
@@ -244,12 +271,42 @@ function Infos.FormatTime(hour, minute)
     return pattern:format(h, minute)
 end
 
+-- Whether a text took the font asked for. A font file the client has not
+-- loaded yet (the themes' own) can be refused on first use and leave the
+-- text without a font.
+local function hasFont(fs, path)
+    local got = fs:GetFont()
+    if type(got) ~= "string" then return false end
+    local function plain(p) return (p:lower():gsub("/", "\\")) end
+    return plain(got) == plain(path)
+end
+-- How often, and how far apart, a refused font is tried again.
+local FONT_RETRIES, FONT_RETRY_DELAY = 8, 0.25
+
+local function setFont(fs, path, size, flags, retries)
+    fs:SetFont(path, size, flags)
+    local wanted = path .. "|" .. size .. "|" .. flags
+    fs.fontWanted = wanted
+    if hasFont(fs, path) then return end
+    retries = retries or FONT_RETRIES
+    if retries > 0 then
+        C_Timer.After(FONT_RETRY_DELAY, function()
+            -- Restyled since: that call has its own tries.
+            if fs.fontWanted == wanted then setFont(fs, path, size, flags, retries - 1) end
+        end)
+    elseif DEFAULT_CHAT_FRAME then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff70c0ff" .. L.ADDON_NAME .. ":|r " .. L.MSG_FONT_REFUSED:format(path))
+    end
+end
+
 local function styleFont(fs, kind)
     local path = fontPath(Infos.Get(kind, "font")) or fs.baseFont
     local size = Infos.Get(kind, "size")
     if not size or size <= 0 then size = fs.baseSize end
     if size then size = math.max(4, math.floor(size * Infos.Scale() / 100 + 0.5)) end
-    if path and size then fs:SetFont(path, size, "OUTLINE") end
+    -- The client's own outline; a theme may want it thicker.
+    local flags = ns.Themes.Spec(ns.Themes.Current()).outline or "OUTLINE"
+    if path and size then setFont(fs, path, size, flags) end
 end
 
 local function anchorFrame(kind)

@@ -13,4 +13,5 @@ The full feature list is in [docs/curseforge/description.md](docs/curseforge/des
     tests/run                    # Lua 5.1, as in the game
     ./install "<WoW>/_forever_/Interface/AddOns"
     tools/package                # dist/ForeverSquareMinimap-<version>.zip
+    python3 tools/make_themes.py # Media/Themes textures (Pillow, numpy)
     tools/release release "<changelog>"   # bump ## Version first

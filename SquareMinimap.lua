@@ -83,7 +83,7 @@ end
 -- --------------------------------------------------------------------------
 -- Size
 -- --------------------------------------------------------------------------
-local LayoutButtons   -- defined further down, needed here already
+local LayoutButtons, ApplyBorder   -- defined further down, needed here already
 
 local function ApplySize(size)
     size = max(CONFIG.minSize, min(CONFIG.maxSize, floor(size + 0.5)))
@@ -102,6 +102,8 @@ local function ApplySize(size)
 
     RefreshIcons()
     LayoutButtons()
+    -- The theme's backdrop is cut to the map's size.
+    ApplyBorder()
     return size
 end
 
@@ -470,28 +472,32 @@ local function BorderColor()
     return c
 end
 
-local function ApplyBorder()
+function ApplyBorder()
     if not border then
         border = CreateFrame("Frame", "ForeverSquareMinimapBorder", Minimap)
         border:SetAllPoints(Minimap)
         border.ring = NewRing(0)
         border.line = NewRing(1)   -- the gold style's inner line, drawn on top
     end
+    -- A theme puts its backdrop between map and border (ThemeArt.lua).
+    local padding = ns.ThemeArt.Padding()
     local style = BorderStyle()
     if style == "NONE" then
         border:Hide()
+        ns.ThemeArt.Apply(padding)
         return
     end
     border:Show()
     local px = OnePixel()
     local size = BorderSize() * px
-    PlaceRing(border.ring, size, size)
+    PlaceRing(border.ring, size, padding + size)
+    ns.ThemeArt.Apply(padding + size)
     if style == "GOLD" then
         PaintGold(border.ring)
         -- The line takes the ring's innermost pixel, but leaves a one pixel
         -- ring all gold.
         if BorderSize() >= 2 then
-            PlaceRing(border.line, px, px)
+            PlaceRing(border.line, px, padding + px)
             PaintFlat(border.line, GOLD.LINE)
             for i = 1, 4 do border.line[i]:Show() end
         else
@@ -505,6 +511,7 @@ end
 
 -- Everything that depends on the profile, e.g. after switching profiles.
 local function ApplyLook()
+    ns.Themes.Upgrade()
     local size = ns.DB().size
     if type(size) ~= "number" then size = CONFIG.defaultSize end
     AnchorTopRight()
@@ -525,6 +532,7 @@ end
 local events = CreateFrame("Frame")
 events:RegisterEvent("PLAYER_LOGIN")
 events:SetScript("OnEvent", function()
+    ns.Themes.Upgrade()
     if type(ns.DB().size) ~= "number" then
         ns.DB().size = CONFIG.defaultSize
     end
