@@ -86,7 +86,7 @@ check("pixel: auto size stays auto", Infos.Get("coords", "size"), 0)
 check("pixel: a default size grows too", Infos.Get("server", "size"), 15)
 check("pixel: the client's outline", Infos.texts.zone._font[3], "OUTLINE")
 check("pixel: body text in the theme font", Infos.Get("server", "font"), "VT323")
-check("pixel: solid shadow", shadows[1]:IsShown(), true)
+check("pixel: no solid shadow (stacked edges)", shadows[1]:IsShown(), false)
 check("pixel: two to copy from", #Themes.Stored(), 2)
 
 -- Positions from another theme, and back.

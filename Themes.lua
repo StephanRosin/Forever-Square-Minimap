@@ -84,7 +84,7 @@ Themes.SPECS = {
     COMIC = {
         font = "Bangers", bodyFont = "Friz Quadrata", fontSizeAdd = 2, outline = "THICKOUTLINE",
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.07, 0.07, 1 } },
-        art = { back = "ComicBack", tint = { 0.7, 0.7, 0.7, 1 }, padding = 3, hardShadow = 5 },
+        art = { back = "ComicBack", tint = { 0.7, 0.7, 0.7, 1 }, padding = 3 },
     },
     -- Translucent ice, quieted (its cracks are busy), a pale rim.
     FROST = {
@@ -96,7 +96,7 @@ Themes.SPECS = {
     PIXEL = {
         font = "VT323", fontSizeAdd = 4,
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 1, 0.95, 0.91, 1 } },
-        art = { back = "PixelBack", padding = 3, hardShadow = 4 },
+        art = { back = "PixelBack", padding = 3 },
     },
 }
 
