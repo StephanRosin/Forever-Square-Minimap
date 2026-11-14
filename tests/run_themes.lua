@@ -64,6 +64,7 @@ check("wood: its border", db.borderStyle, "FLAT")
 check("wood: its border size", db.borderSize, 3)
 check("wood: its font", Infos.Get("zone", "font"), "Cinzel")
 check("wood: font on the text", Infos.texts.zone._font[1]:match("Cinzel%-Bold%.ttf$") ~= nil, true)
+check("wood: clock in Friz", Infos.Get("server", "font"), "Friz Quadrata")
 check("wood: classic stored", db.themeSets.CLASSIC.borderStyle, "GOLD")
 check("wood: classic has no theme", db.themeSets.CLASSIC.theme, nil)
 check("wood: the live set is not stored twice", db.themeSets.WOOD, nil)
@@ -128,7 +129,7 @@ check("parchment: clock in the standard font", Infos.Get("server", "font"), "Fri
 check("parchment: clock keeps its size", Infos.Get("server", "size"), 11)
 check("parchment: coordinates in the standard font", Infos.Get("coords", "font"), "Friz Quadrata")
 for id, spec in pairs(Themes.SPECS) do
-    local body = ({ PARCHMENT = true, FROST = true, GLASS = true, COMIC = true })[id]
+    local body = ({ WOOD = true, PARCHMENT = true, FROST = true, GLASS = true, COMIC = true })[id]
     check("body font of " .. id, spec.bodyFont, body and "Friz Quadrata" or nil)
     check("no bare monochrome in " .. id, (spec.outline or ""):find("MONOCHROME") == nil, true)
 end
@@ -289,7 +290,7 @@ check("upgrade: still wood", db.theme, "WOOD")
 check("upgrade: from classic", db.offsetX, 3)
 check("upgrade: stale set dropped", db.themeSets.TECH, nil)
 check("upgrade: classic kept", db.themeSets.CLASSIC.borderStyle, "GOLD")
-check("upgrade: revision noted", db.themeSets.revision, 2)
+check("upgrade: revision noted", db.themeSets.revision, 3)
 db.borderSize = 6
 ns.Themes.Upgrade()
 check("upgrade: once only", db.borderSize, 6)

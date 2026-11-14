@@ -48,7 +48,7 @@ Themes.SPECS = {
     CLASSIC = {},
     -- Oak boards round the map, a brass rim, brass rivets.
     WOOD = {
-        font = "Cinzel",
+        font = "Cinzel", bodyFont = "Friz Quadrata",
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.72, 0.53, 0.24, 1 } },
         art = { back = "WoodBack", padding = 5, ornament = "Rivet", corners = { 1, 2, 3, 4 }, ornamentSize = 10,
             ornamentInset = 0 },
@@ -103,7 +103,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 2
+Themes.REVISION = 3
 
 -- Each theme's colours, the same in every Forever addon (none for CLASSIC).
 -- The first is the theme as it is. Any other draws the backdrop from the
