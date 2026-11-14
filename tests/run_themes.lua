@@ -60,7 +60,7 @@ check("wood: same profile table", ns.DB(), db)
 check("wood: keeps the size", db.size, 300)
 check("wood: keeps the place", db.offsetX, -40)
 check("wood: keeps a text's place", Infos.Get("zone", "y"), -5)
-check("wood: its border", db.borderStyle, "FLAT")
+check("wood: its border", db.borderStyle, "GOLD")
 check("wood: its border size", db.borderSize, 3)
 check("wood: its font", Infos.Get("zone", "font"), "Cinzel")
 check("wood: font on the text", Infos.texts.zone._font[1]:match("Cinzel%-Bold%.ttf$") ~= nil, true)
@@ -260,6 +260,28 @@ check("pitwall: red wedge top left", ornaments[1]:IsShown() and ornaments[1]._te
 Themes.SetColor("ORANGE")
 check("pitwall orange: the wedge's colour", rgb(ornaments[1]._color), "1,0.54,0,1")
 Themes.SetColor("RED")
+-- The ring is the same in every Forever addon, for every theme and colour:
+-- the theme's own; only Console's colours and Pixel's Handheld recolour it.
+local RINGS = { TECH = "0.25,0.88,0.94,0.9", PARCHMENT = "0.29,0.2,0.12,1", RUNESTONE = "0.1,0.1,0.12,1",
+    GLASS = "0.07,0.06,0.05,1", COMIC = "0.07,0.07,0.07,1", FROST = "0.86,0.96,1,0.8", PIXEL = "1,0.95,0.91,1",
+    SWISS = "0.16,0.16,0.16,1", PITWALL = "0.043,0.047,0.055,1" }
+local OWN_RING = { CONSOLE = { MINT = "0.31,0.93,0.69,1", AMBER = "1,0.69,0,1", PHOSPHOR = "0.22,1,0.08,1",
+    VIOLET = "0.63,0.47,1,1" }, PIXEL = { HANDHELD = "0.78,0.94,0.44,1" } }
+for _, id in ipairs(Themes.IDS) do
+    if id ~= "CLASSIC" then
+        Themes.Switch(id)
+        local chosen = entry.Color()
+        for _, c in ipairs(entry.Colors()) do
+            Themes.SetColor(c)
+            if id == "WOOD" then
+                check("ring " .. id .. " " .. c, db.borderStyle .. " " .. tostring(ring[1]._gradient ~= nil), "GOLD true")
+            else
+                check("ring " .. id .. " " .. c, rgb(ring[1]._color), (OWN_RING[id] or {})[c] or RINGS[id])
+            end
+        end
+        Themes.SetColor(chosen)
+    end
+end
 Themes.Switch("COMIC")
 check("comic grey: paper as today", paper(), "0.7,0.7,0.7,1")
 checkTrue("comic blue: set", entry.SetColor("BLUE"))
@@ -320,12 +342,12 @@ ForeverSquareMinimapChar = { active = "Default" }
 ns.ResetProfileState()
 ns.Themes.Upgrade()
 db = ns.DB()
-check("upgrade: the theme in use made anew", db.borderStyle, "FLAT")
+check("upgrade: the theme in use made anew", db.borderStyle, "GOLD")
 check("upgrade: still wood", db.theme, "WOOD")
 check("upgrade: from classic", db.offsetX, 3)
 check("upgrade: stale set dropped", db.themeSets.TECH, nil)
 check("upgrade: classic kept", db.themeSets.CLASSIC.borderStyle, "GOLD")
-check("upgrade: revision noted", db.themeSets.revision, 3)
+check("upgrade: revision noted", db.themeSets.revision, 4)
 db.borderSize = 6
 ns.Themes.Upgrade()
 check("upgrade: once only", db.borderSize, 6)

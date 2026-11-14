@@ -48,10 +48,10 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
 -- further than Classic's border (SquareMinimap.lua, ThemeInset).
 Themes.SPECS = {
     CLASSIC = {},
-    -- Oak boards round the map, a brass rim, brass rivets.
+    -- Oak boards round the map, the family's gold ring, brass rivets.
     WOOD = {
         font = "Cinzel", bodyFont = "Friz Quadrata",
-        look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.72, 0.53, 0.24, 1 } },
+        look = { borderStyle = "GOLD", borderSize = 3 },
         art = { back = "WoodBack", padding = 5, ornament = "Rivet", corners = { 1, 2, 3, 4 }, ornamentSize = 10,
             ornamentInset = 0 },
     },
@@ -124,7 +124,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 3
+Themes.REVISION = 4
 
 -- Each theme's colours, the same in every Forever addon (none for CLASSIC).
 -- The first is the theme as it is. Any other draws the backdrop from the
