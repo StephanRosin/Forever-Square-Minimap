@@ -260,6 +260,12 @@ check("pitwall: red wedge top left", ornaments[1]:IsShown() and ornaments[1]._te
 Themes.SetColor("ORANGE")
 check("pitwall orange: the wedge's colour", rgb(ornaments[1]._color), "1,0.54,0,1")
 Themes.SetColor("RED")
+-- Swiss and Pitwall share one black with every Forever addon: the flat
+-- backdrop untinted, opaque.
+for _, id in ipairs({ "SWISS", "PITWALL" }) do
+    Themes.Switch(id)
+    check(id .. ": the shared black", look(), PATH .. "SwissBack 1,1,1,1")
+end
 -- The ring is the same in every Forever addon, for every theme and colour:
 -- the theme's own; only Console's colours and Pixel's Handheld recolour it.
 local RINGS = { TECH = "0.25,0.88,0.94,0.9", PARCHMENT = "0.29,0.2,0.12,1", RUNESTONE = "0.1,0.1,0.12,1",

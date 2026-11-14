@@ -112,11 +112,11 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.306, 0.929, 0.69, 1 } },
         art = { back = "ConsoleBack", padding = 4 },
     },
-    -- A timing screen: carbon, a carbon hairline, a red wedge at the top left.
+    -- A timing screen: flat black, a carbon hairline, a red wedge at the top left.
     PITWALL = {
         font = "Titillium Web Bold Italic", bodyFont = "Titillium Web",
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.043, 0.047, 0.055, 1 } },
-        art = { back = "PitwallBack", padding = 4, ornament = "PitwallWedge", corners = { 1 }, ornamentSize = 12,
+        art = { back = "SwissBack", padding = 4, ornament = "PitwallWedge", corners = { 1 }, ornamentSize = 12,
             ornamentInset = 0, ornamentColor = { 0.88, 0.02, 0, 1 } },
     },
 }
