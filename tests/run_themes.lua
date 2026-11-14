@@ -129,8 +129,10 @@ check("parchment: clock in the standard font", Infos.Get("server", "font"), "Fri
 check("parchment: clock keeps its size", Infos.Get("server", "size"), 11)
 check("parchment: coordinates in the standard font", Infos.Get("coords", "font"), "Friz Quadrata")
 for id, spec in pairs(Themes.SPECS) do
-    local body = ({ WOOD = true, PARCHMENT = true, FROST = true, GLASS = true, COMIC = true })[id]
-    check("body font of " .. id, spec.bodyFont, body and "Friz Quadrata" or nil)
+    local body = ({ WOOD = "Friz Quadrata", PARCHMENT = "Friz Quadrata", FROST = "Friz Quadrata",
+        GLASS = "Friz Quadrata", COMIC = "Friz Quadrata", SWISS = "Inter Tight", CONSOLE = "IBM Plex Mono",
+        PITWALL = "Titillium Web" })[id]
+    check("body font of " .. id, spec.bodyFont, body)
     check("no bare monochrome in " .. id, (spec.outline or ""):find("MONOCHROME") == nil, true)
 end
 Themes.Switch("CLASSIC")
@@ -218,6 +220,10 @@ for _, id in ipairs(Themes.IDS) do
 end
 Themes.Switch("PIXEL")
 checkTrue("pixel plum: set", entry.SetColor("PLUM"))
+check("pixel: handheld last", entry.Colors()[9], "HANDHELD")
+checkTrue("pixel handheld: set", entry.SetColor("HANDHELD"))
+check("pixel handheld: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.06 / 0.8, 0.12 / 0.8, 0.06 / 0.8, 1 }))
+entry.SetColor("PLUM")
 check("pixel plum: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.23 / 0.8, 0.08 / 0.8, 0.16 / 0.8, 1 }))
 check("colour: another theme's id refused", select(2, Themes.SetColor("OAK")), "UNKNOWN")
 combat = true
@@ -225,6 +231,35 @@ check("colour: combat refused for the theme in use", select(2, Themes.SetColor("
 checkTrue("colour: a theme not in use in combat", Themes.SetColor("DEEP", "FROST"))
 combat = false
 check("colour: in no profile", ns.DB().themeColors, nil)
+-- The flat themes keep their backdrop in every colour; their texts in the
+-- theme's faces: the zone in the display face, the rest in the text face.
+local ring = _G.ForeverSquareMinimapBorder.ring
+local FACES = { SWISS = { "Inter Tight Bold", "Inter Tight" }, CONSOLE = { "IBM Plex Sans Condensed", "IBM Plex Mono" },
+    PITWALL = { "Titillium Web Bold Italic", "Titillium Web" } }
+for id, faces in pairs(FACES) do
+    Themes.Switch(id)
+    check(id .. ": zone in the display face", Infos.Get("zone", "font"), faces[1])
+    check(id .. ": clock and coordinates in the text face", Infos.Get("server", "font") .. "/" .. Infos.Get("coords", "font"), faces[2] .. "/" .. faces[2])
+    check(id .. ": no size growth", Infos.Get("zone", "size"), db.themeSets.CLASSIC.infos and db.themeSets.CLASSIC.infos.zone and db.themeSets.CLASSIC.infos.zone.size or Infos.DEFAULTS.zone.size)
+    for _, c in ipairs(entry.Colors()) do
+        Themes.SetColor(c)
+        check(id .. " " .. c .. ": backdrop kept", look(), PATH .. Themes.SPECS[id].art.back .. " 1,1,1,1")
+    end
+    Themes.SetColor(entry.Colors()[1])
+end
+Themes.Switch("SWISS")
+check("swiss: white rule along the top", ns.ThemeArt.rule:IsShown() and rgb(ns.ThemeArt.rule._color) .. "/" .. ns.ThemeArt.rule:GetHeight(), "0.95,0.95,0.95,1/3")
+Themes.Switch("CONSOLE")
+check("console: no rule", ns.ThemeArt.rule:IsShown(), false)
+Themes.SetColor("AMBER")
+check("console amber: the border in the accent", rgb(ring[1]._color), "1,0.69,0,1")
+Themes.SetColor("MINT")
+check("console mint: the border mint", rgb(ring[1]._color), "0.31,0.93,0.69,1")
+Themes.Switch("PITWALL")
+check("pitwall: red wedge top left", ornaments[1]:IsShown() and ornaments[1]._texture .. " " .. rgb(ornaments[1]._color), PATH .. "PitwallWedge 0.88,0.02,0,1")
+Themes.SetColor("ORANGE")
+check("pitwall orange: the wedge's colour", rgb(ornaments[1]._color), "1,0.54,0,1")
+Themes.SetColor("RED")
 Themes.Switch("COMIC")
 check("comic grey: paper as today", paper(), "0.7,0.7,0.7,1")
 checkTrue("comic blue: set", entry.SetColor("BLUE"))

@@ -22,7 +22,8 @@ ns.Themes = Themes
 
 Themes.CLASSIC = "CLASSIC"
 -- The order of the choice. Stored is the id, not the place in this list.
-Themes.IDS = { "CLASSIC", "WOOD", "TECH", "PARCHMENT", "RUNESTONE", "GLASS", "COMIC", "FROST", "PIXEL" }
+Themes.IDS = { "CLASSIC", "WOOD", "TECH", "PARCHMENT", "RUNESTONE", "GLASS", "COMIC", "FROST", "PIXEL", "SWISS",
+    "CONSOLE", "PITWALL" }
 
 -- The theme fonts have Latin letters only: on a client whose zone names are
 -- written otherwise the texts keep their font.
@@ -42,7 +43,8 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
 -- piece, corners = which ones (1 top left, 2 top right, 3 bottom left, 4
 -- bottom right), ornamentInset = how far in from the border's outer corner
 -- (never out: nothing reaches past Classic's edge); hardShadow = offset of
--- a solid shadow. The map is drawn smaller by what all this reaches out
+-- a solid shadow; rule = a line ruleSize thick along the top, over the
+-- border. The map is drawn smaller by what all this reaches out
 -- further than Classic's border (SquareMinimap.lua, ThemeInset).
 Themes.SPECS = {
     CLASSIC = {},
@@ -98,6 +100,25 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 1, 0.95, 0.91, 1 } },
         art = { back = "PixelBack", padding = 3 },
     },
+    -- Swiss style: flat black, a grey hairline, one white rule along the top.
+    SWISS = {
+        font = "Inter Tight Bold", bodyFont = "Inter Tight",
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.16, 0.16, 0.16, 1 } },
+        art = { back = "SwissBack", padding = 4, rule = { 0.95, 0.95, 0.95, 1 }, ruleSize = 3 },
+    },
+    -- A terminal: near black with faint scan lines, a thin mint line.
+    CONSOLE = {
+        font = "IBM Plex Sans Condensed", bodyFont = "IBM Plex Mono",
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.31, 0.93, 0.69, 1 } },
+        art = { back = "ConsoleBack", padding = 4 },
+    },
+    -- A timing screen: carbon, a carbon hairline, a red wedge at the top left.
+    PITWALL = {
+        font = "Titillium Web Bold Italic", bodyFont = "Titillium Web",
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.043, 0.047, 0.055, 1 } },
+        art = { back = "PitwallBack", padding = 4, ornament = "PitwallWedge", corners = { 1 }, ornamentSize = 12,
+            ornamentInset = 0, ornamentColor = { 0.88, 0.02, 0, 1 } },
+    },
 }
 
 -- Raised whenever SPECS change a look: theme sets made before are made anew
@@ -109,10 +130,16 @@ Themes.REVISION = 3
 -- The first is the theme as it is. Any other draws the backdrop from the
 -- theme's grey texture (<back>Grey), tinted so its mean lands on `back`
 -- (vertex colour = back / GREY_MEAN, at most 1), and brings its accent
--- (nil: the theme's own). The comic keeps its paper tint (COMIC_PAINT).
+-- (nil: the theme's own). Themes with one dark backdrop in every colour
+-- (SWISS, CONSOLE, PITWALL) change only the accent, the border or the wedge.
+-- `rim` recolours the border: only CONSOLE's colours and Pixel's HANDHELD,
+-- the same in every Forever addon.
+-- The comic keeps its paper tint (COMIC_PAPER).
 local GREY_MEAN = { WoodBack = 0.800, TechBack = 0.705, ParchmentBack = 0.799, StoneBack = 0.800,
     GlassBack = 0.777, FrostBack = 0.796, PixelBack = 0.800 }
-local function colour(id, back, accent) return { id = id, back = back, accent = accent } end
+local function colour(id, back, accent, rim, wedge)
+    return { id = id, back = back, accent = accent, rim = rim, wedge = wedge }
+end
 Themes.COLORS = {
     WOOD = {
         colour("OAK"),
@@ -170,6 +197,25 @@ Themes.COLORS = {
         colour("BLACK", { 0.03, 0.03, 0.04 }, { 0, 0.89, 0.21 }),
         colour("TEAL", { 0.02, 0.17, 0.22 }, { 0.16, 0.68, 1 }),
         colour("PURPLE", { 0.15, 0.1, 0.25 }, { 1, 0.47, 0.66 }),
+        colour("HANDHELD", { 0.06, 0.12, 0.06 }, { 0.78, 0.94, 0.44 }, { 0.78, 0.94, 0.44, 1 }),
+    },
+    SWISS = {
+        colour("RED"),
+        colour("BLUE", nil, { 0.18, 0.42, 1 }),
+        colour("YELLOW", nil, { 1, 0.82, 0 }),
+        colour("WHITE", nil, { 0.95, 0.95, 0.95 }),
+    },
+    CONSOLE = {
+        colour("MINT"),
+        colour("AMBER", nil, { 1, 0.69, 0 }, { 1, 0.69, 0, 1 }),
+        colour("PHOSPHOR", nil, { 0.22, 1, 0.08 }, { 0.22, 1, 0.08, 1 }),
+        colour("VIOLET", nil, { 0.63, 0.47, 1 }, { 0.63, 0.47, 1, 1 }),
+    },
+    PITWALL = {
+        colour("RED"),
+        colour("ORANGE", nil, nil, nil, { 1, 0.54, 0, 1 }),
+        colour("TEAL", nil, nil, nil, { 0, 0.63, 0.61, 1 }),
+        colour("SILVER", nil, nil, nil, { 0.79, 0.81, 0.84, 1 }),
     },
     COMIC = { colour("GREY"), colour("DARKGREY"), colour("BLACK"), colour("WHITE"), colour("YELLOW"),
         colour("BLUE"), colour("RED"), colour("GREEN"), colour("PURPLE") },
@@ -307,10 +353,30 @@ function Themes.Color(themeId)
     return colourOf(themeId, id) and id or colours[1].id
 end
 
+-- The current theme's colour when it is not the theme's own look.
+local function themePaint()
+    local id = Themes.Current()
+    local c = colourOf(id, Themes.Color())
+    return c and c ~= Themes.COLORS[id][1] and c or nil
+end
+
 -- The current theme's colour when it draws from the grey texture.
 local function greyPaint()
-    local c = colourOf(Themes.Current(), Themes.Color())
+    local c = themePaint()
     return c and c.back and c or nil
+end
+
+-- The border's colour the theme's colour sets, else nil (the setting's).
+function Themes.Rim()
+    local c = themePaint()
+    return c and c.rim
+end
+
+-- The ornaments' colour (art: the theme's): the colour's wedge, else the
+-- theme's.
+function Themes.OrnamentColor(art)
+    local c = themePaint()
+    return c and c.wedge or art.ornamentColor
 end
 
 -- The backdrop's texture (art: the theme's): the grey one under a colour.

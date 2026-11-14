@@ -60,9 +60,15 @@ for _, f in ipairs({
     { key = "Bangers", file = "Bangers-Regular.ttf" },
     { key = "Cinzel", file = "Cinzel-Bold.ttf" },
     { key = "Cormorant SC", file = "CormorantSC-Bold.ttf" },
+    { key = "IBM Plex Mono", file = "IBMPlexMono-Regular.ttf" },
+    { key = "IBM Plex Sans Condensed", file = "IBMPlexSansCondensed-Bold.ttf" },
     { key = "IM Fell English SC", file = "IMFeENsc28P.ttf" },
+    { key = "Inter Tight", file = "InterTight-Regular.ttf" },
+    { key = "Inter Tight Bold", file = "InterTight-Bold.ttf" },
     { key = "Marcellus", file = "Marcellus-Regular.ttf" },
     { key = "Space Grotesk", file = "SpaceGrotesk-Bold.ttf" },
+    { key = "Titillium Web", file = "TitilliumWeb-SemiBold.ttf" },
+    { key = "Titillium Web Bold Italic", file = "TitilliumWeb-BoldItalic.ttf" },
     { key = "VT323", file = "VT323-Regular.ttf" },
 }) do
     Infos.FONTS[#Infos.FONTS + 1] = { key = f.key, path = MEDIA .. f.file }

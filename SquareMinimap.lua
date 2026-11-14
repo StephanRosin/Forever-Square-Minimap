@@ -478,7 +478,7 @@ local function BorderSize(db)
 end
 
 local function BorderColor()
-    local c = ns.DB().borderColor
+    local c = ns.Themes.Rim() or ns.DB().borderColor
     if type(c) ~= "table" then c = CONFIG.borderColor end
     return c
 end

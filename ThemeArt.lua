@@ -47,6 +47,7 @@ local function create()
     local level = Minimap:GetFrameLevel()
     if type(level) == "number" then over:SetFrameLevel(level + ORNAMENT_LEVEL) end
     for i = 1, 4 do ornaments[i] = over:CreateTexture(nil, "OVERLAY") end
+    ThemeArt.rule = over:CreateTexture(nil, "OVERLAY")
 end
 
 -- One strip of the backdrop: its rectangle from the map's top left corner
@@ -95,7 +96,7 @@ local function placeOrnaments(a, extent)
     local wanted = {}
     for _, i in ipairs(a.ornament and a.corners or {}) do wanted[i] = true end
     local size, inset = a.ornamentSize or 12, (a.ornamentInset or 0) - extent
-    local c = a.ornamentColor or { 1, 1, 1, 1 }
+    local c = ns.Themes.OrnamentColor(a) or { 1, 1, 1, 1 }
     for i, piece in ipairs(ornaments) do
         piece:SetShown(wanted[i] == true)
         if wanted[i] then
@@ -112,6 +113,19 @@ local function placeOrnaments(a, extent)
     end
 end
 
+-- The rule along the top, over the border, inside the outer edge.
+local function placeRule(a, extent)
+    local rule = ThemeArt.rule
+    rule:SetShown(a.rule ~= nil)
+    if not a.rule then return end
+    rule:ClearAllPoints()
+    rule:SetPoint("TOPLEFT", Minimap, "TOPLEFT", -extent, extent)
+    rule:SetPoint("TOPRIGHT", Minimap, "TOPRIGHT", extent, extent)
+    rule:SetHeight(a.ruleSize)
+    rule:SetColorTexture(1, 1, 1, 1)
+    rule:SetVertexColor(a.rule[1], a.rule[2], a.rule[3], a.rule[4])
+end
+
 -- extent: how far the border reaches out from the map, padding included
 -- (SquareMinimap.lua, ApplyBorder).
 function ThemeArt.Apply(extent)
@@ -120,6 +134,7 @@ function ThemeArt.Apply(extent)
     placeBack(a, ThemeArt.Padding())
     placeShadow(a, extent)
     placeOrnaments(a, extent)
+    placeRule(a, extent)
 end
 
 -- Tests only.
