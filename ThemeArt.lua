@@ -10,12 +10,13 @@ the border. Only plain textures, nothing clickable. The ornaments sit below
 Blizzard's buttons (map + 5) and the mail icon (map + 10).
 -----------------------------------------------------------------------------]]
 
-local ADDON, ns = ...
+local _, ns = ...
 
 local ThemeArt = {}
 ns.ThemeArt = ThemeArt
 
-local PATH = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Themes\\"
+-- The textures come with the embedded LibForeverThemes.
+local Lib = LibForeverThemes
 -- The backdrop files are 128 px tiles, drawn at 128 UI units.
 local TILE = 128
 local ORNAMENT_LEVEL = 3
@@ -70,7 +71,7 @@ local function placeBack(a, p)
     strip(backs[4], p, s, 0, s + p, s)      -- right
     local tint = ns.Themes.Tint(a) or { 1, 1, 1, 1 }
     for i = 1, 4 do
-        backs[i]:SetTexture(PATH .. ns.Themes.Back(a), "REPEAT", "REPEAT")
+        backs[i]:SetTexture(Lib.Texture(ns.Themes.Back(a)), "REPEAT", "REPEAT")
         backs[i]:SetVertexColor(tint[1], tint[2], tint[3], tint[4])
     end
 end
@@ -106,7 +107,7 @@ local function placeOrnaments(a, extent)
             piece:ClearAllPoints()
             piece:SetPoint(point, Minimap, point, dx, dy)
             piece:SetSize(size, size)
-            piece:SetTexture(PATH .. a.ornament)
+            piece:SetTexture(Lib.Texture(a.ornament))
             piece:SetTexCoord(unpack(MIRROR[i]))
             piece:SetVertexColor(c[1], c[2], c[3], c[4])
         end

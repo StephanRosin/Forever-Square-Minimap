@@ -13,5 +13,11 @@ The full feature list is in [docs/curseforge/description.md](docs/curseforge/des
     tests/run                    # Lua 5.1, as in the game
     ./install "<WoW>/_forever_/Interface/AddOns"
     tools/package                # dist/ForeverSquareMinimap-<version>.zip
-    python3 tools/make_themes.py # Media/Themes textures (Pillow, numpy)
     tools/release release "<changelog>"   # bump ## Version first
+
+## License note
+
+The themes (textures, fonts, colours) come from the embedded library LibForeverThemes in
+`Libs/LibForeverThemes` (source: https://github.com/StephanRosin/ForeverThemes, copied in with
+its `tools/sync`; its `tools/make_themes.py` makes the textures). Its fonts in `Media/Fonts` are
+under the SIL Open Font License (see `OFL.txt` and `FONTS.txt` there).

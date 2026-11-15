@@ -184,8 +184,9 @@ local function infoSection(kind)
         get = get("x"), set = set("x") }
     items[#items + 1] = { label = "OPT_MOVE_Y", min = -400, max = 400, step = 1, unit = "px",
         get = get("y"), set = set("y") }
+    -- A font stored under an older name shows under the one listed.
     items[#items + 1] = { type = "select", label = "OPT_INFO_FONT", choices = fontChoices,
-        get = get("font"), set = set("font") }
+        get = function() return LibForeverThemes.FontName(Infos.Get(kind, "font")) end, set = set("font") }
     items[#items + 1] = { label = "OPT_INFO_SIZE", min = 0, max = 32, step = 1,
         get = get("size"), set = set("size") }
     if kind == "perf" then

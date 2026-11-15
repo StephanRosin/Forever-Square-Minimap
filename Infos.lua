@@ -12,7 +12,7 @@ Font "Default" and size "Auto" mean the game font the text is made with
 outline.
 -----------------------------------------------------------------------------]]
 
-local ADDON, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local Infos = {}
@@ -53,37 +53,10 @@ Infos.FONTS = {
     { key = "Morpheus", path = "Fonts\\MORPHEUS.TTF" },
 }
 
--- The themes' fonts (Themes.lua), shipped in Media/Fonts with their
--- licences; Latin letters only.
-local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Fonts\\"
-for _, f in ipairs({
-    { key = "Bangers", file = "Bangers-Regular.ttf" },
-    { key = "Cinzel", file = "Cinzel-Bold.ttf" },
-    { key = "IBM Plex Mono", file = "IBMPlexMono-Regular.ttf" },
-    { key = "IBM Plex Sans Condensed", file = "IBMPlexSansCondensed-Bold.ttf" },
-    { key = "IM Fell English SC", file = "IMFeENsc28P.ttf" },
-    { key = "Julius Sans One", file = "JuliusSansOne-Regular.ttf" },
-    { key = "Inter Tight", file = "InterTight-Regular.ttf" },
-    { key = "Inter Tight Bold", file = "InterTight-Bold.ttf" },
-    { key = "Marcellus", file = "Marcellus-Regular.ttf" },
-    { key = "Space Grotesk", file = "SpaceGrotesk-Bold.ttf" },
-    { key = "Titillium Web", file = "TitilliumWeb-SemiBold.ttf" },
-    { key = "Titillium Web Bold Italic", file = "TitilliumWeb-BoldItalic.ttf" },
-    { key = "VT323", file = "VT323-Regular.ttf" },
-}) do
-    Infos.FONTS[#Infos.FONTS + 1] = { key = f.key, path = MEDIA .. f.file }
-end
-
--- Our own font files loaded while the addon loads: a file used for the
--- first time can be refused (setFont tries again), so the first restyle
--- should not be its first use.
-do
-    local preload = CreateFrame("Frame")
-    preload:Hide()
-    for _, f in ipairs(Infos.FONTS) do
-        if f.path and f.path:find(MEDIA, 1, true) then preload:CreateFontString():SetFont(f.path, 12, "") end
-    end
-end
+-- The themes' fonts come with the embedded LibForeverThemes (SIL Open
+-- Font License, see its Media/Fonts), which also loads them early. Read at
+-- use: a newer copy of the library loading after us replaces the list.
+local Lib = LibForeverThemes
 
 -- The choices for the font dropdown: key and path of every font.
 function Infos.FontList()
@@ -91,6 +64,10 @@ function Infos.FontList()
     for _, f in ipairs(Infos.FONTS) do
         list[#list + 1] = f
         seen[f.key] = true
+    end
+    for _, f in ipairs(Lib.FONTS) do
+        list[#list + 1] = { key = f.name, path = f.path }
+        seen[f.name] = true
     end
     local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
     if LSM then
@@ -106,7 +83,10 @@ function Infos.FontList()
     return list
 end
 
+-- A font stored under an older name (LibForeverThemes' aliases) finds
+-- its file.
 local function fontPath(key)
+    key = Lib.FontName(key)
     for _, f in ipairs(Infos.FontList()) do
         if f.key == key then return f.path end
     end

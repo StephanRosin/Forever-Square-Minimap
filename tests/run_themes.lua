@@ -69,7 +69,7 @@ check("wood: classic stored", db.themeSets.CLASSIC.borderStyle, "GOLD")
 check("wood: classic has no theme", db.themeSets.CLASSIC.theme, nil)
 check("wood: the live set is not stored twice", db.themeSets.WOOD, nil)
 check("wood: backdrop shown", backs[1]:IsShown(), true)
-check("wood: backdrop file", backs[1]._texture, "Interface\\AddOns\\ForeverSquareMinimap\\Media\\Themes\\WoodBack")
+check("wood: backdrop file", backs[1]._texture, "Interface\\AddOns\\ForeverSquareMinimap\\Libs\\LibForeverThemes\\Media\\Themes\\WoodBack")
 check("wood: rivets at four corners", ornaments[4]:IsShown(), true)
 check("wood: no solid shadow", shadows[1]:IsShown(), false)
 
@@ -131,7 +131,7 @@ check("parchment: coordinates in the standard font", Infos.Get("coords", "font")
 for id, spec in pairs(Themes.SPECS) do
     local body = ({ WOOD = "Friz Quadrata", PARCHMENT = "Friz Quadrata", FROST = "Julius Sans One",
         GLASS = "Friz Quadrata", COMIC = "Friz Quadrata", SWISS = "Inter Tight", CONSOLE = "IBM Plex Mono",
-        PITWALL = "Titillium Web" })[id]
+        PITWALL = "Titillium Web SemiBold" })[id]
     check("body font of " .. id, spec.bodyFont, body)
     check("no bare monochrome in " .. id, (spec.outline or ""):find("MONOCHROME") == nil, true)
 end
@@ -206,7 +206,7 @@ check("registry: unknown", select(2, entry.Switch("NOPE")), "UNKNOWN")
 entry.Switch("CLASSIC")
 
 -- Every theme's colours: the backdrop only (no accent here), outside the sets.
-local PATH = "Interface\\AddOns\\ForeverSquareMinimap\\Media\\Themes\\"
+local PATH = "Interface\\AddOns\\ForeverSquareMinimap\\Libs\\LibForeverThemes\\Media\\Themes\\"
 local function rgb(t) return table.concat({ t[1], t[2], t[3], t[4] }, ",") end
 local function paper() return table.concat(backs[1]._color, ",") end
 local function look() return backs[1]._texture .. " " .. paper() end
@@ -240,8 +240,8 @@ check("colour: in no profile", ns.DB().themeColors, nil)
 -- The flat themes keep their backdrop in every colour; their texts in the
 -- theme's faces: the zone in the display face, the rest in the text face.
 local ring = _G.ForeverSquareMinimapBorder.ring
-local FACES = { SWISS = { "Inter Tight Bold", "Inter Tight" }, CONSOLE = { "IBM Plex Sans Condensed", "IBM Plex Mono" },
-    PITWALL = { "Titillium Web Bold Italic", "Titillium Web" } }
+local FACES = { SWISS = { "Inter Tight Bold", "Inter Tight" }, CONSOLE = { "IBM Plex Sans Condensed Bold", "IBM Plex Mono" },
+    PITWALL = { "Titillium Web Bold Italic", "Titillium Web SemiBold" } }
 for id, faces in pairs(FACES) do
     Themes.Switch(id)
     check(id .. ": zone in the display face", Infos.Get("zone", "font"), faces[1])
@@ -254,7 +254,7 @@ for id, faces in pairs(FACES) do
     Themes.SetColor(entry.Colors()[1])
 end
 Themes.Switch("SWISS")
-check("swiss: white rule along the top", ns.ThemeArt.rule:IsShown() and rgb(ns.ThemeArt.rule._color) .. "/" .. ns.ThemeArt.rule:GetHeight(), "0.95,0.95,0.95,1/3")
+check("swiss: white rule along the top", ns.ThemeArt.rule:IsShown() and rgb(ns.ThemeArt.rule._color) .. "/" .. ns.ThemeArt.rule:GetHeight(), "0.949,0.949,0.949,1/3")
 Themes.Switch("CONSOLE")
 check("console: no rule", ns.ThemeArt.rule:IsShown(), false)
 Themes.SetColor("AMBER")
@@ -274,7 +274,7 @@ end
 -- the theme's own; only Console's colours and Pixel's Handheld recolour it.
 local RINGS = { TECH = "0.25,0.88,0.94,0.9", PARCHMENT = "0.29,0.2,0.12,1", RUNESTONE = "0.1,0.1,0.12,1",
     GLASS = "0.07,0.06,0.05,1", COMIC = "0.07,0.07,0.07,1", FROST = "0.86,0.96,1,0.8", PIXEL = "1,0.95,0.91,1",
-    SWISS = "0.16,0.16,0.16,1", PITWALL = "0.043,0.047,0.055,1" }
+    SWISS = "0.165,0.165,0.165,1", PITWALL = "0.043,0.047,0.055,1" }
 local OWN_RING = { CONSOLE = { MINT = "0.306,0.929,0.69,1", AMBER = "1,0.69,0,1", PHOSPHOR = "0.224,1,0.078,1",
     VIOLET = "0.627,0.471,1,1" }, PIXEL = { HANDHELD = "0.784,0.941,0.439,1" } }
 for _, id in ipairs(Themes.IDS) do
@@ -362,21 +362,36 @@ db.borderSize = 6
 ns.Themes.Upgrade()
 check("upgrade: once only", db.borderSize, 6)
 
--- The shipped files are there.
+-- The shipped files are there, in the embedded library.
+local MEDIA = ROOT .. "/Libs/LibForeverThemes/Media/"
 for _, name in ipairs({ "Fonts/OFL.txt", "Fonts/FONTS.txt", "Fonts/VT323-Regular.ttf", "Themes/WoodBack.tga",
     "Themes/Seal.tga" }) do
-    local f = io.open(ROOT .. "/Media/" .. name, "rb")
+    local f = io.open(MEDIA .. name, "rb")
     check("shipped: " .. name, f ~= nil, true)
     if f then f:close() end
 end
 for id, spec in pairs(ns.Themes.SPECS) do
     local art = spec.art or {}
     for _, file in ipairs({ art.back, art.ornament }) do
-        local f = io.open(ROOT .. "/Media/Themes/" .. file .. ".tga", "rb")
+        local f = io.open(MEDIA .. "Themes/" .. file .. ".tga", "rb")
         check("texture of " .. id .. ": " .. file, f ~= nil, true)
         if f then f:close() end
     end
 end
+
+-- Embedded LibForeverThemes: the copy in Libs/ is the library's own
+-- (ForeverThemes, tools/sync there), checked when that repository sits next
+-- to this one (not in CI).
+local LIBREPO = ROOT .. "/../ForeverThemes"
+if io.open(LIBREPO .. "/LibForeverThemes.lua") then
+    local diff = io.popen("diff -rq '" .. LIBREPO .. "/LibForeverThemes.lua' '" .. ROOT
+        .. "/Libs/LibForeverThemes/LibForeverThemes.lua' && diff -rq '" .. LIBREPO .. "/Media' '" .. ROOT
+        .. "/Libs/LibForeverThemes/Media' 2>&1"):read("*a")
+    check("copy equals ForeverThemes (run its tools/sync)", diff, "")
+else
+    print("  (skipped: ForeverThemes not next to this addon)")
+end
+check("library loaded from our copy", LibForeverThemes.FOLDER, ADDON)
 
 print(("%d passed, %d failed"):format(pass, fail))
 os.exit(fail == 0 and 0 or 1)
