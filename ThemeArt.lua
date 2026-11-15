@@ -97,7 +97,7 @@ local function placeOrnaments(a, extent)
     local wanted = {}
     for _, i in ipairs(a.ornament and a.corners or {}) do wanted[i] = true end
     local size, inset = a.ornamentSize or 12, (a.ornamentInset or 0) - extent
-    local c = ns.Themes.OrnamentColor(a) or { 1, 1, 1, 1 }
+    local c = a.ornamentColor or { 1, 1, 1, 1 }
     for i, piece in ipairs(ornaments) do
         piece:SetShown(wanted[i] == true)
         if wanted[i] then

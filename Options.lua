@@ -31,31 +31,9 @@ end
 
 -- While the hub "Forever Themes" sets this addon's theme, its own choice
 -- is greyed and the hub's window is one click away.
-local function followsHub()
-    local hub = LibForeverThemes.Hub()
-    return hub ~= nil and hub.Follows(ADDON)
-end
-
--- WoW opens no browser: the hub's download link in Blizzard's text popup,
--- selected for copying.
-local HUB_URL = "https://www.curseforge.com/wow/addons/forever-themes"
-if StaticPopupDialogs then
-    StaticPopupDialogs.FOREVERSQUAREMINIMAP_HUB_LINK = {
-        text = "", button1 = OKAY or "OK", hasEditBox = 1, editBoxWidth = 350,
-        maxLetters = 0,   -- the edit box is shared; another dialog may leave its limit behind
-        OnShow = function(dialog)
-            local box = dialog.GetEditBox and dialog:GetEditBox()
-            if box then box:SetText(HUB_URL); box:HighlightText(); box:SetFocus() end
-        end,
-        EditBoxOnEnterPressed = function(box) box:GetParent():Hide() end,
-        EditBoxOnEscapePressed = function(box) box:GetParent():Hide() end,
-        timeout = 0, whileDead = true, hideOnEscape = true,
-    }
-end
-function ns.ShowHubLink()
-    StaticPopupDialogs.FOREVERSQUAREMINIMAP_HUB_LINK.text = L.POPUP_HUB_LINK
-    StaticPopup_Show("FOREVERSQUAREMINIMAP_HUB_LINK")
-end
+local function followsHub() return LibForeverThemes.Follows(ADDON) end
+-- The hub's texts are the library's (the client's language).
+local function hubText(key) return function() return LibForeverThemes.Text(key) end end
 
 local function themeSection()
     return {
@@ -63,7 +41,7 @@ local function themeSection()
         { type = "select", label = "OPT_THEME", hint = "HINT_THEME",
           choices = function()
               local list = {}
-              for _, id in ipairs(Themes.IDS) do list[#list + 1] = { value = id, label = L["THEME_" .. id] } end
+              for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do list[#list + 1] = { value = id, label = L["THEME_" .. id] } end
               return list
           end,
           disabled = followsHub,
@@ -87,13 +65,13 @@ local function themeSection()
           disabled = followsHub,
           get = function() return Themes.Color() end,
           set = function(id) themeRefused(select(2, Themes.SetColor(id))) end },
-        { type = "buttons", text = "THEME_FOLLOWS_HUB", visible = followsHub, buttons = {
-            { label = "THEME_OPEN_HUB", width = 200, onClick = function() LibForeverThemes.Hub().OpenOptions() end },
+        { type = "buttons", text = hubText("HUB_FOLLOWS"), visible = followsHub, buttons = {
+            { label = hubText("HUB_OPEN"), width = 200, onClick = function() LibForeverThemes.Hub().OpenOptions() end },
         } },
         -- Without the hub: where to get it.
-        { type = "buttons", text = "THEME_HUB_HINT", muted = true,
+        { type = "buttons", text = hubText("HUB_MISSING"), muted = true,
           visible = function() return LibForeverThemes.Hub() == nil end, buttons = {
-            { label = "THEME_HUB_LINK", width = 200, onClick = function() ns.ShowHubLink() end },
+            { label = hubText("HUB_LINK"), width = 200, onClick = function() LibForeverThemes.ShowHubLink() end },
         } },
         { type = "buttons", visible = function() return Themes.HasOthers() and not followsHub() end, buttons = {
             { label = "THEME_ALL", width = 240, onClick = function()

@@ -161,7 +161,7 @@ end
 local function near(a, b) return math.abs(a - b) < 1e-6 end
 Themes.Switch("CLASSIC")
 local w0, x0, y0 = outerBox()
-for _, id in ipairs(Themes.IDS) do
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
     Themes.Switch(id)
     local w, x, y = outerBox()
     check(id .. ": outer width as classic", near(w, w0), true)
@@ -212,7 +212,7 @@ local function paper() return table.concat(backs[1]._color, ",") end
 local function look() return backs[1]._texture .. " " .. paper() end
 check("colours: none under classic", #entry.Colors() .. tostring(entry.Color()), "0nil")
 check("colours: comic list", table.concat(entry.Colors("COMIC"), ","), "GREY,DARKGREY,BLACK,WHITE,YELLOW,BLUE,RED,GREEN,PURPLE")
-for _, id in ipairs(Themes.IDS) do
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
     local art = Themes.SPECS[id].art
     if id ~= "CLASSIC" and art and art.back then
         Themes.Switch(id)
@@ -277,7 +277,7 @@ local RINGS = { TECH = "0.25,0.88,0.94,0.9", PARCHMENT = "0.29,0.2,0.12,1", RUNE
     SWISS = "0.165,0.165,0.165,1", PITWALL = "0.043,0.047,0.055,1" }
 local OWN_RING = { CONSOLE = { MINT = "0.306,0.929,0.69,1", AMBER = "1,0.69,0,1", PHOSPHOR = "0.224,1,0.078,1",
     VIOLET = "0.627,0.471,1,1" }, PIXEL = { HANDHELD = "0.784,0.941,0.439,1" } }
-for _, id in ipairs(Themes.IDS) do
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
     if id ~= "CLASSIC" then
         Themes.Switch(id)
         local chosen = entry.Color()
@@ -389,7 +389,8 @@ for id, want in pairs(ARRANGED) do
     check(id .. ": arranged classic kept", db.size .. " " .. db.colScale .. " " .. db.rotateShape, "290 85 DIAMOND")
 end
 ForeverSquareMinimapProfiles = { profiles = { Default = { theme = "WOOD", size = 290,
-    themeSets = { revision = Themes.REVISION, CLASSIC = arrangedClassic(),
+    -- As release 1.12.0 stored them (revision 8, no seedRevision yet).
+    themeSets = { revision = 8, CLASSIC = arrangedClassic(),
         PIXEL = { theme = "PIXEL", borderSize = 5, infos = { zone = { font = "Morpheus", size = 20 } } } } } } }
 ns.ResetProfileState()
 Themes.Upgrade()

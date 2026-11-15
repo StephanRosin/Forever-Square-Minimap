@@ -517,6 +517,16 @@ ns.SwitchProfile("Second")
 check("and back", Minimap:GetWidth(), 100)
 check("delete", ns.DeleteProfile("Second"), true)
 check("back on Default", ns.ActiveProfile(), "Default")
+-- Every profile change hands the theme back to the hub "Forever Themes".
+local synced = 0
+LibForeverThemes.SetHub({ Follows = function() return true end, Sync = function() synced = synced + 1 end })
+ns.SwitchProfile("Third")
+ns.SwitchProfile("Default")
+ns.CopyProfileFrom("Third")
+ns.SwitchProfile("Third")
+ns.DeleteProfile("Third")
+check("hub synced after switch, copy, delete", synced, 5)
+LibForeverThemes.SetHub(nil)
 M.chat = {}
 ns.AskDeleteProfile()
 check("the last profile stays", #ns.ProfileList(), 1)
@@ -674,7 +684,7 @@ local function themeRow()
 end
 local function hubRow()
     for _, f in ipairs(M.frames) do
-        if f.label and f.label._text == ns.L.THEME_FOLLOWS_HUB then return f end
+        if f.label and f.label._text == LibForeverThemes.Text("HUB_FOLLOWS") then return f end
     end
 end
 local follows, hubOpened = true, 0
@@ -700,13 +710,13 @@ check("no hub: as before", tostring(themeRow().button:IsEnabled()) .. " " .. tos
 -- Without the hub a muted line says where to get it; its button shows the link to copy.
 local function hintRow()
     for _, f in ipairs(M.frames) do
-        if f.label and f.label._text == ns.L.THEME_HUB_HINT then return f end
+        if f.label and f.label._text == LibForeverThemes.Text("HUB_MISSING") then return f end
     end
 end
 check("no hub: hint shown", hintRow():IsShown(), true)
 hintRow().buttons[1]:GetScript("OnClick")()
 local popup = M.popups[#M.popups]
-check("hint: link popup", popup.which .. " " .. popup.text, "FOREVERSQUAREMINIMAP_HUB_LINK " .. ns.L.POPUP_HUB_LINK)
+check("hint: link popup", popup.which .. " " .. popup.text, "LIBFOREVERTHEMES_HUB_LINK " .. LibForeverThemes.Text("HUB_COPY"))
 local box = { SetText = function(self, t) self.text = t end, HighlightText = function() end, SetFocus = function() end }
 StaticPopupDialogs[popup.which].OnShow({ GetEditBox = function() return box end })
 check("hint: the hub's address", box.text, "https://www.curseforge.com/wow/addons/forever-themes")

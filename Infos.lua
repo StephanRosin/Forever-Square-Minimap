@@ -83,14 +83,13 @@ function Infos.FontList()
     return list
 end
 
--- A font stored under an older name (LibForeverThemes' aliases) finds
--- its file.
+-- A font's file: the list's first, then the library's (a font stored under
+-- an older name, LibForeverThemes' aliases, finds its file there).
 local function fontPath(key)
-    key = Lib.FontName(key)
     for _, f in ipairs(Infos.FontList()) do
         if f.key == key then return f.path end
     end
-    return nil
+    return Lib.FontPath(key)
 end
 
 -- Settings ------------------------------------------------------------------

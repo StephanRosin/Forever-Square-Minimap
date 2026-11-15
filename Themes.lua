@@ -22,9 +22,6 @@ ns.Themes = Themes
 
 local Lib = LibForeverThemes
 Themes.CLASSIC = Lib.CLASSIC
--- The order of the choice (the family's, LibForeverThemes). Stored is the
--- id, not the place in this list.
-Themes.IDS = Lib.IDS
 
 -- Each theme's identity (backdrop, tint, ornament, rule, ring colour,
 -- fonts) is LibForeverThemes'; here only the map's part on top.
@@ -44,7 +41,8 @@ Themes.IDS = Lib.IDS
 -- outer corner (never out: nothing reaches past Classic's edge); hardShadow
 -- = offset of a solid shadow. The map is drawn smaller by what all this
 -- reaches out further than Classic's border (SquareMinimap.lua, ThemeInset).
-local T = Lib.THEMES
+-- The theme lists come from Lib.SpecIds(Themes.SPECS) at use (the library's
+-- order; stored is the id, not the place).
 Themes.SPECS = Lib.Specs({
     -- Oak boards round the map, the family's gold ring, brass rivets.
     WOOD = {
@@ -53,72 +51,71 @@ Themes.SPECS = Lib.Specs({
     },
     -- Dark navy with a faint grid, a thin cyan line.
     TECH = {
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.TECH.rim },
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.TECH.rim },
         art = { padding = 4 },
     },
     -- Parchment round the map, a brown ink line, a wax seal.
     PARCHMENT = {
-        look = { borderStyle = "FLAT", borderSize = 2, borderColor = T.PARCHMENT.rim },
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.PARCHMENT.rim },
         art = { padding = 5, ornamentSize = 14, ornamentInset = 0 },
     },
     -- Grey granite, a dark chiselled edge, glowing runes.
     RUNESTONE = {
-        look = { borderStyle = "FLAT", borderSize = 2, borderColor = T.RUNESTONE.rim },
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.RUNESTONE.rim },
         art = { padding = 6, ornamentSize = 10, ornamentInset = 0 },
     },
     -- A mosaic of coloured glass round the map, dark lead.
     GLASS = {
-        look = { borderStyle = "FLAT", borderSize = 3, borderColor = T.GLASS.rim },
+        look = { borderStyle = "FLAT", borderSize = 3, borderColor = Lib.THEMES.GLASS.rim },
         art = { padding = 7 },
     },
     -- Thick ink line, halftone paper (grey as in the other Forever addons).
     COMIC = {
         outline = "THICKOUTLINE",
-        look = { borderStyle = "FLAT", borderSize = 3, borderColor = T.COMIC.rim },
+        look = { borderStyle = "FLAT", borderSize = 3, borderColor = Lib.THEMES.COMIC.rim },
         art = { padding = 3 },
     },
     -- Translucent ice, quieted (its cracks are busy), a pale rim.
     FROST = {
         outline = "",
-        look = { borderStyle = "FLAT", borderSize = 2, borderColor = T.FROST.rim },
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.FROST.rim },
         art = { padding = 3 },
     },
     -- A light pixel frame, scan lines.
     PIXEL = {
-        look = { borderStyle = "FLAT", borderSize = 3, borderColor = T.PIXEL.rim },
+        look = { borderStyle = "FLAT", borderSize = 3, borderColor = Lib.THEMES.PIXEL.rim },
         art = { padding = 3 },
     },
     -- Swiss style: flat black, a grey hairline, one white rule along the top.
     SWISS = {
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.SWISS.rim },
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.SWISS.rim },
         art = { padding = 4 },
     },
     -- A terminal: near black with faint scan lines, a thin mint line.
     CONSOLE = {
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.CONSOLE.rim },
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.CONSOLE.rim },
         art = { padding = 4 },
     },
     -- A timing screen: flat black, a carbon hairline. No strip, no wedge: the
-    -- map has no title row, and its top-left corner is the mail icon's.
+    -- map has no title row (nothing here draws them), and its top-left corner
+    -- is the mail icon's.
     PITWALL = {
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.PITWALL.rim },
-        art = { padding = 4, strip = false, wedge = false },
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.PITWALL.rim },
+        art = { padding = 4 },
     },
 })
 
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched. The library's part counts too: a change there
--- to what seeding copies (fonts, sizes, ring colour) raises it.
+-- to what seeding copies (fonts, sizes, ring colour) raises the library's
+-- SEED_REVISION (Lib.NeedsReseed).
 local OWN_REVISION = 8
-Themes.REVISION = OWN_REVISION + Lib.SEED_REVISION * Lib.SEED_STEP
 
--- The theme colours are the library's (Lib.COLORS), the same in every
--- Forever addon. The minimap takes the backdrop and the border only (no
--- accent; its comic has no dark ink that a dark paper would have to
--- lighten). Colours are stored account wide, outside profiles and theme
--- sets (AccountDB().themeColors).
-Themes.COLORS = Lib.COLORS
+-- The theme colours are the library's, the same in every Forever addon. The
+-- minimap takes the backdrop and the border only (no accent; its comic has
+-- no dark ink that a dark paper would have to lighten). Colours are stored
+-- account wide, outside profiles and theme sets (AccountDB().themeColors).
 
 -- The texts in the theme font; the others are body text (bodyFont).
 local DISPLAY = { zone = true }
@@ -139,20 +136,21 @@ function Themes.Spec(id)
     return Themes.SPECS[id] or Themes.SPECS.CLASSIC
 end
 
--- The active profile's stored theme sets; stale ones (an older REVISION)
+-- The active profile's stored theme sets; stale ones (Lib.NeedsReseed)
 -- dropped.
 local function storedSets()
     local db = ns.DB()
     local sets = db.themeSets
     if type(sets) ~= "table" then
-        sets = { revision = Themes.REVISION }
+        sets = {}
+        Lib.MarkSeeded(sets, OWN_REVISION)
         db.themeSets = sets
     end
-    if sets.revision ~= Themes.REVISION then
-        for _, id in ipairs(Themes.IDS) do
+    if Lib.NeedsReseed(sets, OWN_REVISION) then
+        for _, id in ipairs(Lib.SpecIds(Themes.SPECS)) do
             if id ~= Themes.CLASSIC then sets[id] = nil end
         end
-        sets.revision = Themes.REVISION
+        Lib.MarkSeeded(sets, OWN_REVISION)
     end
     return sets
 end
@@ -229,13 +227,6 @@ function Themes.Rim()
     return Lib.Rim(Themes.Current(), Themes.Color())
 end
 
--- The ornaments' colour (art: the theme's): the colour's wedge, else the
--- theme's.
-function Themes.OrnamentColor(art)
-    local c = Lib.Paint(Themes.Current(), Themes.Color())
-    return c and c.wedge or art.ornamentColor
-end
-
 -- The backdrop's texture (art: the theme's): the grey one under a colour.
 function Themes.Back(art)
     return Lib.Back(art, Themes.Current(), Themes.Color())
@@ -307,12 +298,12 @@ function Themes.Reset()
     return true
 end
 
--- The themes with stored settings to copy from, in IDS order.
+-- The themes with stored settings to copy from, in the library's order.
 function Themes.Stored()
     -- Only looking: a profile that never had a theme gets no sets.
     if type(ns.DB().themeSets) ~= "table" then return {} end
     local sets, list = storedSets(), {}
-    for _, id in ipairs(Themes.IDS) do
+    for _, id in ipairs(Lib.SpecIds(Themes.SPECS)) do
         if sets[id] and id ~= Themes.Current() then list[#list + 1] = id end
     end
     return list
@@ -385,12 +376,12 @@ function Themes.Restore(undo)
 end
 
 -- At login and after a profile switch, before the look is applied: a theme
--- in use made under an older REVISION is made anew from CLASSIC, quietly. A
+-- in use made under an older revision (Lib.NeedsReseed) is made anew from CLASSIC, quietly. A
 -- profile that never had a theme is left alone.
 function Themes.Upgrade()
     local db = ns.DB()
     local sets = db.themeSets
-    if type(sets) ~= "table" or sets.revision == Themes.REVISION then return end
+    if type(sets) ~= "table" or not Lib.NeedsReseed(sets, OWN_REVISION) then return end
     local current = Themes.Current()
     local base = sets[Themes.CLASSIC]
     storedSets()

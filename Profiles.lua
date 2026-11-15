@@ -74,8 +74,10 @@ function ns.ProfileList()
     return list
 end
 
+-- The profile replaced the theme: a follower of the hub gets its theme back.
 local function applyLook()
     if ns.api and ns.api.ApplyLook then ns.api.ApplyLook() end
+    LibForeverThemes.HubSync()
 end
 
 -- Switches to a profile. A name that does not exist yet is created from the
