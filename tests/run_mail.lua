@@ -53,6 +53,16 @@ M.Fire("PLAYER_LOGIN")
 
 local mail = M.byName["ForeverSquareMinimapMail"]
 check("own mail icon", mail ~= nil, true)
+check("our sharp envelope", mail.icon._texture, "Interface\\AddOns\\ForeverSquareMinimap\\Media\\IconMinimapMail.tga")
+check("cut to the icon's 4:3", table.concat(mail.icon._coords, ","), "0,1,0.125,0.875")
+local glows = 0
+for _, t in ipairs(M.textures) do
+    if t ~= mail.icon and t._texture == ns.Mail.TEXTURE and t._coords then glows = glows + 1 end
+end
+check("the glow is the same envelope", glows, 1)
+local shipped = io.open(ROOT .. "/Media/IconMinimapMail.tga", "rb")
+check("the envelope ships", shipped ~= nil, true)
+if shipped then shipped:close() end
 check("above the border", M.level["ForeverSquareMinimapMail"], 3 + ns.Mail.LEVEL_ABOVE_MAP)
 check("hidden without mail", mail:IsShown(), false)
 M.newMail = true

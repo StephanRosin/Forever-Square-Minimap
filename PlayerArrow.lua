@@ -3,8 +3,8 @@ PlayerArrow.lua -- a bigger player arrow on the map.
 
 The client draws the player arrow itself; Forever has no way to size it alone
 (SetPlayerTexture* are gone, SetIconScale grows every icon). So above 100 %
-our own arrow, Blizzard's texture, lies over it in the middle of the map and
-turns with the player. Where GetPlayerFacing gives nothing (instances) it
+our own arrow (Media/IconMinimapArrow.tga, pointing north like Blizzard's)
+lies over it in the middle of the map and turns with the player. Where GetPlayerFacing gives nothing (instances) it
 hides and Blizzard's small arrow shows.
 -----------------------------------------------------------------------------]]
 
@@ -13,7 +13,7 @@ local ADDON, ns = ...
 local PlayerArrow = {}
 ns.PlayerArrow = PlayerArrow
 
-PlayerArrow.TEXTURE = "Interface\\Minimap\\MinimapArrow"
+PlayerArrow.TEXTURE = "Interface\\AddOns\\ForeverSquareMinimap\\Media\\IconMinimapArrow.tga"
 -- shortcut: the size Blizzard's arrow seems to have; calibrate in game if 100 % looks off.
 PlayerArrow.BASE = 32
 PlayerArrow.DEFAULT = 100

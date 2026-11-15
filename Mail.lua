@@ -5,7 +5,8 @@ Older clients have MiniMapMailFrame, which is used as it is. Forever has the
 modern minimap instead: the mail icon lives in MinimapCluster.IndicatorFrame,
 which is hidden with the cluster, and it cannot be moved out: on new mail its
 own code calls self:GetParent():Layout(), which the minimap does not have. So
-there it gets an icon of its own, with Blizzard's art and the same event.
+there it gets an icon of its own, with our own art (Media/IconMinimapMail.tga:
+Blizzard's atlas is tiny and blurs when scaled) and the same event.
 
 By default the icon sits just past the map's top left corner. It can be
 placed anywhere (a point on the map, the icon's own point, X/Y, so also
@@ -20,9 +21,11 @@ local Mail = {}
 ns.Mail = Mail
 
 Mail.NAME = "ForeverSquareMinimapMail"
-local ATLAS = "ui-hud-minimap-mail-up"
-local FALLBACK = "Interface\\Minimap\\Tracking\\Mailbox"
+Mail.TEXTURE = "Interface\\AddOns\\ForeverSquareMinimap\\Media\\IconMinimapMail.tga"
 local ICON_W, ICON_H = 24, 18
+-- The envelope fills the square texture's middle rows 8-56 of 64: cut to 4:3,
+-- the icon's size, so it neither stretches nor moves.
+Mail.TEX_COORD = { 0, 1, 8 / 64, 56 / 64 }
 -- The border sits one level above the map (Blizzard's default for a child).
 Mail.LEVEL_ABOVE_MAP = 10
 
@@ -79,7 +82,8 @@ end
 
 -- Our own icon (Forever) --------------------------------------------------------
 local function setArt(texture)
-    if not pcall(texture.SetAtlas, texture, ATLAS) then texture:SetTexture(FALLBACK) end
+    texture:SetTexture(Mail.TEXTURE)
+    texture:SetTexCoord(unpack(Mail.TEX_COORD))
 end
 
 local function updateOwn(f)

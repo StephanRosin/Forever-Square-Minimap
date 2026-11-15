@@ -330,6 +330,10 @@ do
     local turned
     A.Set(200)
     local icon = A.frame.icon
+    check("our sharp arrow", icon._texture, "Interface\\AddOns\\ForeverSquareMinimap\\Media\\IconMinimapArrow.tga")
+    local shipped = io.open(ADDONDIR .. "/Media/IconMinimapArrow.tga", "rb")
+    check("the arrow ships", shipped ~= nil, true)
+    if shipped then shipped:close() end
     icon.SetRotation = function(_, r) turned = r end
     A.frame:GetScript("OnUpdate")(A.frame)
     check("200 %: twice the size", A.frame:GetWidth(), 2 * A.BASE)
