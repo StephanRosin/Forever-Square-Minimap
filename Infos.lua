@@ -326,7 +326,9 @@ local function setFont(fs, path, size, flags, retries)
             -- Restyled since: that call has its own tries.
             if fs.fontWanted == wanted then setFont(fs, path, size, flags, retries - 1) end
         end)
-    elseif DEFAULT_CHAT_FRAME and not refusedFonts[path] then
+    -- A hidden text never makes the client load a new file: no complaint,
+    -- the next shown use loads it.
+    elseif DEFAULT_CHAT_FRAME and fs:IsVisible() and not refusedFonts[path] then
         refusedFonts[path] = true
         DEFAULT_CHAT_FRAME:AddMessage("|cff70c0ff" .. L.ADDON_NAME .. ":|r " .. L.MSG_FONT_REFUSED:format(path))
     end
