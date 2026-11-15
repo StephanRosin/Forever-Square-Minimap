@@ -135,7 +135,13 @@ for id, spec in pairs(Themes.SPECS) do
     check("body font of " .. id, spec.bodyFont, body)
     check("no bare monochrome in " .. id, (spec.outline or ""):find("MONOCHROME") == nil, true)
 end
+-- Frost: no outline, the font object's 1 px drop shadow (GameFontNormal*).
+checkTrue("frost", Themes.Switch("FROST"))
+check("frost: zone without outline", Infos.texts.zone._font[3] .. "|" .. Infos.texts.zone._template, "|GameFontNormal")
+check("frost: clock without outline", Infos.texts.server._font[3] .. "|" .. Infos.texts.server._template,
+    "|GameFontNormalSmall")
 Themes.Switch("CLASSIC")
+check("classic after frost: outline", Infos.texts.zone._font[3], "OUTLINE")
 
 -- Tech without corner pieces; comic paper as in the other Forever addons.
 Themes.Switch("TECH")
