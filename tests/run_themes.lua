@@ -129,7 +129,7 @@ check("parchment: clock in the standard font", Infos.Get("server", "font"), "Fri
 check("parchment: clock keeps its size", Infos.Get("server", "size"), 11)
 check("parchment: coordinates in the standard font", Infos.Get("coords", "font"), "Friz Quadrata")
 for id, spec in pairs(Themes.SPECS) do
-    local body = ({ WOOD = "Friz Quadrata", PARCHMENT = "Friz Quadrata", FROST = "Friz Quadrata",
+    local body = ({ WOOD = "Friz Quadrata", PARCHMENT = "Friz Quadrata", FROST = "Julius Sans One",
         GLASS = "Friz Quadrata", COMIC = "Friz Quadrata", SWISS = "Inter Tight", CONSOLE = "IBM Plex Mono",
         PITWALL = "Titillium Web" })[id]
     check("body font of " .. id, spec.bodyFont, body)
@@ -228,7 +228,7 @@ Themes.Switch("PIXEL")
 checkTrue("pixel plum: set", entry.SetColor("PLUM"))
 check("pixel: handheld last", entry.Colors()[9], "HANDHELD")
 checkTrue("pixel handheld: set", entry.SetColor("HANDHELD"))
-check("pixel handheld: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.06 / 0.8, 0.12 / 0.8, 0.06 / 0.8, 1 }))
+check("pixel handheld: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.059 / 0.8, 0.122 / 0.8, 0.059 / 0.8, 1 }))
 entry.SetColor("PLUM")
 check("pixel plum: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.23 / 0.8, 0.08 / 0.8, 0.16 / 0.8, 1 }))
 check("colour: another theme's id refused", select(2, Themes.SetColor("OAK")), "UNKNOWN")
@@ -357,7 +357,7 @@ check("upgrade: still wood", db.theme, "WOOD")
 check("upgrade: from classic", db.offsetX, 3)
 check("upgrade: stale set dropped", db.themeSets.TECH, nil)
 check("upgrade: classic kept", db.themeSets.CLASSIC.borderStyle, "GOLD")
-check("upgrade: revision noted", db.themeSets.revision, 5)
+check("upgrade: revision noted", db.themeSets.revision, 8)
 db.borderSize = 6
 ns.Themes.Upgrade()
 check("upgrade: once only", db.borderSize, 6)

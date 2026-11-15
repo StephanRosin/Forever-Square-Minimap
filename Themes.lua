@@ -53,7 +53,7 @@ Themes.SPECS = {
     WOOD = {
         font = "Cinzel", bodyFont = "Friz Quadrata",
         look = { borderStyle = "GOLD", borderSize = 3 },
-        art = { back = "WoodBack", padding = 5, ornament = "Rivet", corners = { 1, 2, 3, 4 }, ornamentSize = 10,
+        art = { back = "WoodBack", tint = { 0.5, 0.5, 0.5, 1 }, padding = 5, ornament = "Rivet", corners = { 1, 2, 3, 4 }, ornamentSize = 10,
             ornamentInset = 0 },
     },
     -- Dark navy with a faint grid, a thin cyan line.
@@ -66,14 +66,14 @@ Themes.SPECS = {
     PARCHMENT = {
         font = "IM Fell English SC", bodyFont = "Friz Quadrata", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.29, 0.2, 0.12, 1 } },
-        art = { back = "ParchmentBack", tint = { 0.85, 0.82, 0.78, 1 }, padding = 5, ornament = "Seal", corners = { 3 }, ornamentSize = 14,
+        art = { back = "ParchmentBack", tint = { 0.45, 0.45, 0.45, 1 }, padding = 5, ornament = "Seal", corners = { 3 }, ornamentSize = 14,
             ornamentInset = 0 },
     },
     -- Grey granite, a dark chiselled edge, glowing runes.
     RUNESTONE = {
         font = "Marcellus", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.1, 0.1, 0.12, 1 } },
-        art = { back = "StoneBack", padding = 6, ornament = "Rune", corners = { 1, 2 }, ornamentSize = 10,
+        art = { back = "StoneBack", tint = { 0.55, 0.55, 0.55, 1 }, padding = 6, ornament = "Rune", corners = { 1, 2 }, ornamentSize = 10,
             ornamentInset = 0, ornamentColor = { 0.35, 0.95, 0.85, 1 } },
     },
     -- A mosaic of coloured glass round the map, dark lead.
@@ -91,9 +91,9 @@ Themes.SPECS = {
     },
     -- Translucent ice, quieted (its cracks are busy), a pale rim.
     FROST = {
-        font = "Cinzel", bodyFont = "Friz Quadrata", outline = "",
+        font = "Julius Sans One", bodyFont = "Julius Sans One", outline = "",
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.86, 0.96, 1, 0.8 } },
-        art = { back = "FrostBack", padding = 3, tint = { 0.6, 0.66, 0.72, 0.75 } },
+        art = { back = "FrostBack", padding = 3, tint = { 0.55, 0.55, 0.55, 0.85 } },
     },
     -- A light pixel frame, scan lines, a solid shadow.
     PIXEL = {
@@ -125,7 +125,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 5
+Themes.REVISION = 8
 
 -- Each theme's colours, the same in every Forever addon (none for CLASSIC).
 -- The first is the theme as it is. Any other draws the backdrop from the
@@ -198,7 +198,7 @@ Themes.COLORS = {
         colour("BLACK", { 0.03, 0.03, 0.04 }, { 0, 0.89, 0.21 }),
         colour("TEAL", { 0.02, 0.17, 0.22 }, { 0.16, 0.68, 1 }),
         colour("PURPLE", { 0.15, 0.1, 0.25 }, { 1, 0.47, 0.66 }),
-        colour("HANDHELD", { 0.06, 0.12, 0.06 }, { 0.784, 0.941, 0.439 }, { 0.784, 0.941, 0.439, 1 }),
+        colour("HANDHELD", { 0.059, 0.122, 0.059 }, { 0.784, 0.941, 0.439 }, { 0.784, 0.941, 0.439, 1 }),
     },
     SWISS = {
         colour("RED"),

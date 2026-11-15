@@ -62,6 +62,7 @@ for _, f in ipairs({
     { key = "IBM Plex Mono", file = "IBMPlexMono-Regular.ttf" },
     { key = "IBM Plex Sans Condensed", file = "IBMPlexSansCondensed-Bold.ttf" },
     { key = "IM Fell English SC", file = "IMFeENsc28P.ttf" },
+    { key = "Julius Sans One", file = "JuliusSansOne-Regular.ttf" },
     { key = "Inter Tight", file = "InterTight-Regular.ttf" },
     { key = "Inter Tight Bold", file = "InterTight-Bold.ttf" },
     { key = "Marcellus", file = "Marcellus-Regular.ttf" },
