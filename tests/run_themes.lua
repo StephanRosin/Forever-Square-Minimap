@@ -362,6 +362,41 @@ db.borderSize = 6
 ns.Themes.Upgrade()
 check("upgrade: once only", db.borderSize, 6)
 
+-- A theme set the developer arranged in the game is what a first pick
+-- seeds from the same Classic set (looks only; places left out), and a
+-- set already stored stays as it is at login.
+local function arrangedClassic()
+    return { size = 290, colScale = 85, colSpacing = 11, rotateShape = "DIAMOND", borderStyle = "NONE",
+        borderSize = 2, buttonShow = false, fade = { combatAlpha = 100, mouseover = true },
+        infos = { zone = { show = true, font = "Friz Quadrata", size = 11 }, coords = { show = true, size = 11 },
+            perf = { size = 11 }, ["local"] = { size = 11 }, server = { show = true, size = 11 } } }
+end
+local ARRANGED = {
+    PIXEL = { borderStyle = "FLAT", borderSize = 3, ring = "1,0.95,0.91,1", fonts = "VT323 15 VT323 15 VT323 15" },
+    RUNESTONE = { borderStyle = "FLAT", borderSize = 2, ring = "0.1,0.1,0.12,1",
+        fonts = "Marcellus 12 Marcellus 12 Marcellus 12" },
+}
+for id, want in pairs(ARRANGED) do
+    ForeverSquareMinimapProfiles = { profiles = { Default = arrangedClassic() } }
+    ns.ResetProfileState()
+    Themes.Switch(id)
+    db = ns.DB()
+    local i = db.infos
+    check(id .. ": arranged border", db.borderStyle .. " " .. db.borderSize, want.borderStyle .. " " .. want.borderSize)
+    check(id .. ": arranged ring", table.concat(db.borderColor, ","), want.ring)
+    check(id .. ": arranged fonts", table.concat({ i.zone.font, i.zone.size, i.server.font, i.server.size,
+        i.coords.font, i.coords.size }, " "), want.fonts)
+    check(id .. ": arranged classic kept", db.size .. " " .. db.colScale .. " " .. db.rotateShape, "290 85 DIAMOND")
+end
+ForeverSquareMinimapProfiles = { profiles = { Default = { theme = "WOOD", size = 290,
+    themeSets = { revision = Themes.REVISION, CLASSIC = arrangedClassic(),
+        PIXEL = { theme = "PIXEL", borderSize = 5, infos = { zone = { font = "Morpheus", size = 20 } } } } } } }
+ns.ResetProfileState()
+Themes.Upgrade()
+local kept = ns.DB().themeSets.PIXEL
+check("stored set untouched at login", kept.borderSize .. " " .. kept.infos.zone.font .. " " .. kept.infos.zone.size,
+    "5 Morpheus 20")
+
 -- The shipped files are there, in the embedded library.
 local MEDIA = ROOT .. "/Libs/LibForeverThemes/Media/"
 for _, name in ipairs({ "Fonts/OFL.txt", "Fonts/FONTS.txt", "Fonts/VT323-Regular.ttf", "Themes/WoodBack.tga",

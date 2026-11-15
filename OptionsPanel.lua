@@ -73,8 +73,11 @@ local function buttonsRow(page, opt)
     local x = INSET
     row.buttons = {}
     if opt.text then
-        row.label = Style.Text(row, 12)
+        row.label = Style.Text(row, 12, opt.muted and "muted" or nil)
         row.label:SetPoint("LEFT", row, "LEFT", INSET, 0)
+        -- A long line wraps before the buttons.
+        row.label:SetWidth(Widgets.CONTROL_X - INSET - 12)
+        row.label:SetJustifyH("LEFT")
         row.label:SetText(labelText(opt.text))
         x = Widgets.CONTROL_X
     end

@@ -697,6 +697,25 @@ ns.RefreshOptions()
 check("no hub: as before", tostring(themeRow().button:IsEnabled()) .. " " .. tostring(hubRow():IsShown())
     .. " " .. tostring(allRow():IsShown()), "true false true")
 
+-- Without the hub a muted line says where to get it; its button shows the link to copy.
+local function hintRow()
+    for _, f in ipairs(M.frames) do
+        if f.label and f.label._text == ns.L.THEME_HUB_HINT then return f end
+    end
+end
+check("no hub: hint shown", hintRow():IsShown(), true)
+hintRow().buttons[1]:GetScript("OnClick")()
+local popup = M.popups[#M.popups]
+check("hint: link popup", popup.which .. " " .. popup.text, "FOREVERSQUAREMINIMAP_HUB_LINK " .. ns.L.POPUP_HUB_LINK)
+local box = { SetText = function(self, t) self.text = t end, HighlightText = function() end, SetFocus = function() end }
+StaticPopupDialogs[popup.which].OnShow({ GetEditBox = function() return box end })
+check("hint: the hub's address", box.text, "https://www.curseforge.com/wow/addons/forever-themes")
+LibForeverThemes.SetHub({ Follows = function() return false end, OpenOptions = function() end })
+ns.RefreshOptions()
+check("hub loaded: no hint", hintRow():IsShown(), false)
+LibForeverThemes.SetHub(nil)
+ns.RefreshOptions()
+
 _G.ForeverThemes.FakeOther = nil
 Themes.SetColor(Themes.Colors("PIXEL")[1], "PIXEL")
 Themes.Switch("CLASSIC")

@@ -36,6 +36,27 @@ local function followsHub()
     return hub ~= nil and hub.Follows(ADDON)
 end
 
+-- WoW opens no browser: the hub's download link in Blizzard's text popup,
+-- selected for copying.
+local HUB_URL = "https://www.curseforge.com/wow/addons/forever-themes"
+if StaticPopupDialogs then
+    StaticPopupDialogs.FOREVERSQUAREMINIMAP_HUB_LINK = {
+        text = "", button1 = OKAY or "OK", hasEditBox = 1, editBoxWidth = 350,
+        maxLetters = 0,   -- the edit box is shared; another dialog may leave its limit behind
+        OnShow = function(dialog)
+            local box = dialog.GetEditBox and dialog:GetEditBox()
+            if box then box:SetText(HUB_URL); box:HighlightText(); box:SetFocus() end
+        end,
+        EditBoxOnEnterPressed = function(box) box:GetParent():Hide() end,
+        EditBoxOnEscapePressed = function(box) box:GetParent():Hide() end,
+        timeout = 0, whileDead = true, hideOnEscape = true,
+    }
+end
+function ns.ShowHubLink()
+    StaticPopupDialogs.FOREVERSQUAREMINIMAP_HUB_LINK.text = L.POPUP_HUB_LINK
+    StaticPopup_Show("FOREVERSQUAREMINIMAP_HUB_LINK")
+end
+
 local function themeSection()
     return {
         { type = "header", label = "SECTION_THEME" },
@@ -68,6 +89,11 @@ local function themeSection()
           set = function(id) themeRefused(select(2, Themes.SetColor(id))) end },
         { type = "buttons", text = "THEME_FOLLOWS_HUB", visible = followsHub, buttons = {
             { label = "THEME_OPEN_HUB", width = 200, onClick = function() LibForeverThemes.Hub().OpenOptions() end },
+        } },
+        -- Without the hub: where to get it.
+        { type = "buttons", text = "THEME_HUB_HINT", muted = true,
+          visible = function() return LibForeverThemes.Hub() == nil end, buttons = {
+            { label = "THEME_HUB_LINK", width = 200, onClick = function() ns.ShowHubLink() end },
         } },
         { type = "buttons", visible = function() return Themes.HasOthers() and not followsHub() end, buttons = {
             { label = "THEME_ALL", width = 240, onClick = function()
