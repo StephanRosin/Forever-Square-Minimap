@@ -665,6 +665,38 @@ check("apply all: theme and colour", other.theme .. " " .. tostring(other.color)
 check("apply all: says how many", (M.chat[1] or ""):find("1 other", 1, true) ~= nil, true)
 Themes.Switch("WOOD")
 check("apply all: unknown theme skipped", Themes.ApplyToAll() .. " " .. other.theme, "0 PIXEL")
+-- The hub "Forever Themes": while it is followed, the own choice is greyed
+-- (value still shown), a line with a button to the hub, no "Apply to all".
+local function themeRow()
+    for _, f in ipairs(M.frames) do
+        if f.opts and f.label and f.label._text == ns.L.OPT_THEME then return f end
+    end
+end
+local function hubRow()
+    for _, f in ipairs(M.frames) do
+        if f.label and f.label._text == ns.L.THEME_FOLLOWS_HUB then return f end
+    end
+end
+local follows, hubOpened = true, 0
+LibForeverThemes.SetHub({ Follows = function(folder) return follows and folder == "ForeverSquareMinimap" end,
+    OpenOptions = function() hubOpened = hubOpened + 1 end })
+ns.RefreshOptions()
+check("hub follow: theme greyed, value shown", tostring(themeRow().button:IsEnabled()) .. " "
+    .. themeRow().button.text._text, "false " .. ns.L.THEME_WOOD)
+check("hub follow: colour greyed", colourRow().button:IsEnabled(), false)
+check("hub follow: line shown", hubRow():IsShown(), true)
+hubRow().buttons[1]:GetScript("OnClick")()
+check("hub follow: button opens the hub", hubOpened, 1)
+check("hub follow: no apply to all", allRow():IsShown(), false)
+follows = false
+ns.RefreshOptions()
+check("hub own theme: as before", tostring(themeRow().button:IsEnabled()) .. " " .. tostring(colourRow().button:IsEnabled())
+    .. " " .. tostring(hubRow():IsShown()) .. " " .. tostring(allRow():IsShown()), "true true false true")
+LibForeverThemes.SetHub(nil)
+ns.RefreshOptions()
+check("no hub: as before", tostring(themeRow().button:IsEnabled()) .. " " .. tostring(hubRow():IsShown())
+    .. " " .. tostring(allRow():IsShown()), "true false true")
+
 _G.ForeverThemes.FakeOther = nil
 Themes.SetColor(Themes.Colors("PIXEL")[1], "PIXEL")
 Themes.Switch("CLASSIC")

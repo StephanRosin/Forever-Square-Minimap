@@ -97,6 +97,8 @@ local function newWidget(name)
     function w:GetFrameStrata()  return M.strata[self._name or self] or "MEDIUM" end
     function w:SetFrameLevel(v)  M.level[self._name or self] = v end
     function w:EnableMouse(v)    M.mouse[self._name or self] = v end
+    function w:SetEnabled(v)     self._enabled = v and true or false end
+    function w:IsEnabled()       return self._enabled ~= false end
     function w:SetParent(parent)
         self._parent = parent
         M.reparented[self._name or self] = parent and parent.GetName and parent:GetName()

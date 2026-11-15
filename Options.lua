@@ -29,6 +29,13 @@ local function themeRefused(why)
     end
 end
 
+-- While the hub "Forever Themes" sets this addon's theme, its own choice
+-- is greyed and the hub's window is one click away.
+local function followsHub()
+    local hub = LibForeverThemes.Hub()
+    return hub ~= nil and hub.Follows(ADDON)
+end
+
 local function themeSection()
     return {
         { type = "header", label = "SECTION_THEME" },
@@ -38,6 +45,7 @@ local function themeSection()
               for _, id in ipairs(Themes.IDS) do list[#list + 1] = { value = id, label = L["THEME_" .. id] } end
               return list
           end,
+          disabled = followsHub,
           get = function() return Themes.Current() end,
           set = function(id)
               local ok, why = Themes.Switch(id)
@@ -55,9 +63,13 @@ local function themeSection()
               end
               return list
           end,
+          disabled = followsHub,
           get = function() return Themes.Color() end,
           set = function(id) themeRefused(select(2, Themes.SetColor(id))) end },
-        { type = "buttons", visible = Themes.HasOthers, buttons = {
+        { type = "buttons", text = "THEME_FOLLOWS_HUB", visible = followsHub, buttons = {
+            { label = "THEME_OPEN_HUB", width = 200, onClick = function() LibForeverThemes.Hub().OpenOptions() end },
+        } },
+        { type = "buttons", visible = function() return Themes.HasOthers() and not followsHub() end, buttons = {
             { label = "THEME_ALL", width = 240, onClick = function()
                 DEFAULT_CHAT_FRAME:AddMessage("|cffffd100" .. L.ADDON_NAME .. ":|r "
                     .. L.THEME_ALL_DONE:format(Themes.ApplyToAll()))

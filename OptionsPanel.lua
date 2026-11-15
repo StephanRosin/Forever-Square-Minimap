@@ -66,11 +66,18 @@ local function newStack(page)
     return stack
 end
 
--- Several buttons side by side.
+-- Several buttons side by side; with `text` a line at the left and the
+-- buttons in the control column.
 local function buttonsRow(page, opt)
     local row = CreateFrame("Frame", nil, page)
     local x = INSET
     row.buttons = {}
+    if opt.text then
+        row.label = Style.Text(row, 12)
+        row.label:SetPoint("LEFT", row, "LEFT", INSET, 0)
+        row.label:SetText(labelText(opt.text))
+        x = Widgets.CONTROL_X
+    end
     for _, b in ipairs(opt.buttons) do
         local button = Widgets.Button(row, { text = labelText(b.label), width = b.width or BUTTON_W,
             onClick = b.onClick })
@@ -151,14 +158,16 @@ local function pageFor(i)
     local built = {}
     for i, opt in ipairs(ps.rows) do
         local row, height = widgetFor(page, opt)
-        built[i] = { row = row, height = height, visible = opt.visible }
+        built[i] = { row = row, height = height, visible = opt.visible, disabled = opt.disabled }
     end
-    -- A row with `visible` comes and goes: the page is stacked anew.
+    -- A row with `visible` comes and goes: the page is stacked anew. One
+    -- with `disabled` is greyed while that says so.
     page.relayout = function()
         local stack = newStack(page)
         for _, b in ipairs(built) do
             local shown = not b.visible or b.visible()
             b.row:SetShown(shown)
+            if b.disabled then b.row:SetEnabled(not b.disabled()) end
             if shown then
                 b.row:ClearAllPoints()
                 stack.add(b.row, b.height)
