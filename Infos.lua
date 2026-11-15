@@ -59,7 +59,6 @@ local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Fonts\\"
 for _, f in ipairs({
     { key = "Bangers", file = "Bangers-Regular.ttf" },
     { key = "Cinzel", file = "Cinzel-Bold.ttf" },
-    { key = "Cormorant SC", file = "CormorantSC-Bold.ttf" },
     { key = "IBM Plex Mono", file = "IBMPlexMono-Regular.ttf" },
     { key = "IBM Plex Sans Condensed", file = "IBMPlexSansCondensed-Bold.ttf" },
     { key = "IM Fell English SC", file = "IMFeENsc28P.ttf" },

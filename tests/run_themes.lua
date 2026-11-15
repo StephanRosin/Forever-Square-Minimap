@@ -357,7 +357,7 @@ check("upgrade: still wood", db.theme, "WOOD")
 check("upgrade: from classic", db.offsetX, 3)
 check("upgrade: stale set dropped", db.themeSets.TECH, nil)
 check("upgrade: classic kept", db.themeSets.CLASSIC.borderStyle, "GOLD")
-check("upgrade: revision noted", db.themeSets.revision, 4)
+check("upgrade: revision noted", db.themeSets.revision, 5)
 db.borderSize = 6
 ns.Themes.Upgrade()
 check("upgrade: once only", db.borderSize, 6)

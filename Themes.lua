@@ -38,8 +38,7 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
 -- player's size then. nil: the theme font. outline: the texts' outline flags; always the
 -- client's own, never copies of the text behind it (with the theme fonts
 -- those showed black text in Forever Unit Frames). Frost: "" (none), the
--- texts keep their font object's 1 px drop shadow (GameFontNormal*):
--- Cormorant's hairlines drowned in an outline.
+-- texts keep their font object's 1 px drop shadow (GameFontNormal*).
 -- art (ThemeArt.lua): back = backdrop file in Media/Themes, shown in the
 -- padding between map and border; tint = its colour; ornament = corner
 -- piece, corners = which ones (1 top left, 2 top right, 3 bottom left, 4
@@ -92,7 +91,7 @@ Themes.SPECS = {
     },
     -- Translucent ice, quieted (its cracks are busy), a pale rim.
     FROST = {
-        font = "Cormorant SC", bodyFont = "Friz Quadrata", fontSizeAdd = 2, outline = "",
+        font = "Cinzel", bodyFont = "Friz Quadrata", outline = "",
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.86, 0.96, 1, 0.8 } },
         art = { back = "FrostBack", padding = 3, tint = { 0.6, 0.66, 0.72, 0.75 } },
     },
@@ -126,7 +125,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 4
+Themes.REVISION = 5
 
 -- Each theme's colours, the same in every Forever addon (none for CLASSIC).
 -- The first is the theme as it is. Any other draws the backdrop from the
