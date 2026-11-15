@@ -331,7 +331,7 @@ end
 -- has them.
 local BUTTON_HEADERS = { tracking = "OPT_BTN_TRACKING", calendar = "OPT_BTN_CALENDAR",
     compartment = "OPT_BTN_COMPARTMENT", difficulty = "OPT_BTN_DIFFICULTY",
-    daynight = "OPT_BTN_DAYNIGHT" }
+    daynight = "OPT_BTN_DAYNIGHT", groupfinder = "OPT_BTN_GROUPFINDER" }
 
 local function buttonsTab()
     local Buttons = ns.Buttons

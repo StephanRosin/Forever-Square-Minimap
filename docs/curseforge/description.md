@@ -49,6 +49,7 @@ A theme frames the map with its backdrop, border and corner pieces and gives the
 - **Tracking**, **calendar**, the **addon compartment** and the **instance difficulty** move onto the map, since the round frame they hung from is gone.
 - Drawn as bare symbols in one size, like the mail icon, by default as a small column in the map's bottom right corner. Each can be switched off, placed anywhere and scaled.
 - The addon compartment gets a grey gear with the addon count, since Blizzard's round button has no bare symbol.
+- **Group Finder eye**: Blizzard pins it to where the round map's edge would be, which is inside the square map. It sits in the bottom left corner instead and can be switched off, placed and scaled like the others. Once you move it in Edit Mode, Edit Mode keeps it.
 - **Day/night orb**: Classic's day/night indicator, which the modern minimap of WoW Forever lacks, as an optional button (off by default; Buttons tab). Sun from 5:30 to 21:00 server time, moon otherwise; the tooltip shows the server time.
 - **Every addon in the addon compartment**: addons with a LibDBIcon minimap button (most of them) are listed there too, not only those that register for it, and so is every addon with a page under Options > AddOns — a click opens that page. No addon is listed twice. Optionally their buttons disappear from the map, Forever Square Minimap's own button included.
 

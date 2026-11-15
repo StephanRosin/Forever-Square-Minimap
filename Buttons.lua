@@ -21,7 +21,7 @@ local ADDON, ns = ...
 local Buttons = {}
 ns.Buttons = Buttons
 
-Buttons.KINDS = { "tracking", "calendar", "daynight", "compartment", "difficulty" }
+Buttons.KINDS = { "tracking", "calendar", "daynight", "compartment", "difficulty", "groupfinder" }
 
 -- Only the modern minimap (WoW: Forever) has them on the cluster. Older
 -- clients keep their button column and day/night dial as before.
@@ -37,7 +37,20 @@ local FRAMES = {
     daynight = function() return ns.DayNight.Frame() end,
     compartment = function() return _G.AddonCompartmentFrame end,
     difficulty = function() return MinimapCluster.InstanceDifficulty end,
+    -- The queue eye, an Edit Mode system Forever anchors to the round map's
+    -- edge (Minimap CENTER -68,-68): inside a bigger square map. Left to Edit
+    -- Mode while it is open or once the player moved it there.
+    groupfinder = function()
+        local b = _G.QueueStatusButton
+        if not b or (EditModeManagerFrame and EditModeManagerFrame:IsEditModeActive())
+            or (b.IsInDefaultPosition and not b:IsInDefaultPosition()) then return nil end
+        return b
+    end,
 }
+
+-- Hangs from UIParent, not the hidden cluster: stays there, so Edit Mode
+-- keeps placing it in screen coordinates.
+local KEEP_PARENT = { groupfinder = true }
 
 -- A column in the map's bottom right corner: calendar at the bottom,
 -- tracking above it, the addon compartment above that; the difficulty
@@ -50,6 +63,8 @@ Buttons.DEFAULTS = {
     compartment = { show = true, mapPoint = "BOTTOMRIGHT", point = "TOPRIGHT", x = -2, y = 75, scale = 100,
         collect = true, hideIcons = false },
     difficulty = { show = true, mapPoint = "BOTTOMRIGHT", point = "BOTTOMRIGHT", x = -2, y = 82, scale = 100 },
+    -- Bottom left, above the coordinates; the eye is big, so smaller.
+    groupfinder = { show = true, mapPoint = "BOTTOMLEFT", point = "BOTTOMLEFT", x = 0, y = 14, scale = 70 },
 }
 
 -- Above the map's border, like the mail icon.
@@ -173,13 +188,29 @@ function Buttons.Set(kind, field, value)
     Buttons.Apply()
 end
 
+local function scaleOf(kind)
+    return math.max(0.25, (Buttons.Get(kind, "scale") or 100) / 100)
+end
+
+-- Offsets count in the frame's own scale: divided, they stay pixels.
+local function anchorOf(kind)
+    local scale = scaleOf(kind)
+    return Buttons.Get(kind, "point"), Minimap, Buttons.Get(kind, "mapPoint"),
+        Buttons.Get(kind, "x") / scale, Buttons.Get(kind, "y") / scale
+end
+
 local function place(kind, frame)
-    local scale = math.max(0.25, (Buttons.Get(kind, "scale") or 100) / 100)
-    frame:SetScale(scale)
-    -- Offsets count in the frame's own scale: divided, they stay pixels.
+    frame:SetScale(scaleOf(kind))
     frame:ClearAllPoints()
-    frame:SetPoint(Buttons.Get(kind, "point"), Minimap, Buttons.Get(kind, "mapPoint"),
-        Buttons.Get(kind, "x") / scale, Buttons.Get(kind, "y") / scale)
+    frame:SetPoint(anchorOf(kind))
+end
+
+-- Whether the frame still hangs where place() put it.
+local function inPlace(kind, frame)
+    local p, rel, rp, x, y = frame:GetPoint(1)
+    local wp, wrel, wrp, wx, wy = anchorOf(kind)
+    return rel == wrel and p == wp and rp == wrp
+        and math.abs((x or 0) - wx) < 0.5 and math.abs((y or 0) - wy) < 0.5
 end
 
 function Buttons.Apply()
@@ -187,7 +218,7 @@ function Buttons.Apply()
     for _, kind in ipairs(Buttons.KINDS) do
         local frame = Buttons.Frame(kind)
         if frame then
-            if frame.SetParent then frame:SetParent(Minimap) end
+            if frame.SetParent and not KEEP_PARENT[kind] then frame:SetParent(Minimap) end
             if SKINS[kind] and not frame.fsmSkinned then
                 SKINS[kind](frame)
                 frame.fsmSkinned = true
@@ -209,12 +240,9 @@ end
 function Buttons.Check()
     for _, kind in ipairs(Buttons.KINDS) do
         local frame = Buttons.Frame(kind)
-        if frame and frame.GetPoint then
-            local _, relativeTo = frame:GetPoint(1)
-            if relativeTo ~= Minimap then
-                Buttons.Apply()
-                return
-            end
+        if frame and frame.GetPoint and not inPlace(kind, frame) then
+            Buttons.Apply()
+            return
         end
     end
 end

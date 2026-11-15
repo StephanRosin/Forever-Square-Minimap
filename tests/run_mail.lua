@@ -27,6 +27,12 @@ MinimapCluster.Tracking.Background = MinimapCluster.Tracking:CreateTexture()
 MinimapCluster.Tracking.Button = M.newWidget("ClusterTrackingButton")
 MinimapCluster.InstanceDifficulty = M.newWidget("ClusterDifficulty")
 _G.AddonCompartmentFrame = M.newWidget("AddonCompartmentFrame")
+-- The queue eye: an Edit Mode system on UIParent, by default hung from the
+-- Minimap's centre.
+_G.QueueStatusButton = M.newWidget("QueueStatusButton")
+QueueStatusButton.fsmDefault = true
+QueueStatusButton.IsInDefaultPosition = function(self) return self.fsmDefault end
+QueueStatusButton:SetPoint("CENTER", Minimap, "CENTER", -68, -68)
 -- Build 70425: framed tracking and calendar art, re-set on every hover; the
 -- bare atlases from before still exist.
 for _, b in ipairs({ MinimapCluster.Tracking.Button, GameTimeFrame }) do
@@ -151,6 +157,23 @@ check("in place: nothing redone", applied, 0)
 MinimapCluster.InstanceDifficulty:SetPoint("BOTTOMRIGHT", MinimapCluster, "TOPRIGHT", -2, -2)
 B.Check()
 check("put back on the map", MinimapCluster.InstanceDifficulty._anchor[2], Minimap)
+-- The group finder: placed like the others, but stays on UIParent.
+local eye = QueueStatusButton
+check("group finder bottom left", eye._anchor[1] .. ">" .. eye._anchor[3], "BOTTOMLEFT>BOTTOMLEFT")
+check("group finder not reparented", M.reparented["QueueStatusButton"], nil)
+-- Blizzard re-anchors it to the Minimap itself: still caught.
+eye:SetPoint("CENTER", Minimap, "CENTER", -68, -68)
+B.Check()
+check("group finder put back", eye._anchor[1], "BOTTOMLEFT")
+B.Set("groupfinder", "show", false)
+check("group finder off", eye:GetAlpha(), 0)
+B.Set("groupfinder", "show", true)
+-- Moved in Edit Mode: Edit Mode's, left alone.
+eye.fsmDefault = false
+eye:SetPoint("TOP", UIParent, "TOP", 0, -100)
+B.Check()
+check("moved in Edit Mode: left alone", eye._anchor[2], UIParent)
+eye.fsmDefault = true
 B.Apply = realApply
 
 -- The day/night orb Forever lacks: off by default, the old texture.
