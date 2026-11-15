@@ -33,7 +33,7 @@ end
 -- is greyed and the hub's window is one click away.
 local function followsHub() return LibForeverThemes.Follows(ADDON) end
 -- The hub's texts are the library's (the client's language).
-local function hubText(key) return function() return LibForeverThemes.Text(key) end end
+local function hubText(key) return function() return LibForeverThemes.Text(key, ns.Locale.Current()) end end
 
 local function themeSection()
     return {
@@ -71,7 +71,7 @@ local function themeSection()
         -- Without the hub: where to get it.
         { type = "buttons", text = hubText("HUB_MISSING"), muted = true,
           visible = function() return LibForeverThemes.Hub() == nil end, buttons = {
-            { label = hubText("HUB_LINK"), width = 200, onClick = function() LibForeverThemes.ShowHubLink() end },
+            { label = hubText("HUB_LINK"), width = 200, onClick = function() LibForeverThemes.ShowHubLink(nil, ns.Locale.Current()) end },
         } },
         { type = "buttons", visible = function() return Themes.HasOthers() and not followsHub() end, buttons = {
             { label = "THEME_ALL", width = 240, onClick = function()
