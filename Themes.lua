@@ -42,7 +42,8 @@ Themes.CLASSIC = Lib.CLASSIC
 -- = offset of a solid shadow. The map is drawn smaller by what all this
 -- reaches out further than Classic's border (SquareMinimap.lua, ThemeInset).
 -- The theme lists come from Lib.SpecIds(Themes.SPECS) at use (the library's
--- order; stored is the id, not the place).
+-- order; stored is the id, not the place). The HD themes (WOOD_HD, ...)
+-- are their base's part here over a finer backdrop of their own (withHd).
 Themes.SPECS = Lib.Specs({
     -- Oak boards round the map, the family's gold ring, brass rivets.
     WOOD = {
@@ -103,7 +104,7 @@ Themes.SPECS = Lib.Specs({
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.PITWALL.rim },
         art = { padding = 4 },
     },
-})
+}, true)
 
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.

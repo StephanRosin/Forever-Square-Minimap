@@ -131,7 +131,7 @@ check("parchment: coordinates in the standard font", Infos.Get("coords", "font")
 for id, spec in pairs(Themes.SPECS) do
     local body = ({ WOOD = "Friz Quadrata", PARCHMENT = "Friz Quadrata", FROST = "Julius Sans One",
         GLASS = "Friz Quadrata", COMIC = "Friz Quadrata", SWISS = "Inter Tight", CONSOLE = "IBM Plex Mono",
-        PITWALL = "Titillium Web SemiBold" })[id]
+        PITWALL = "Titillium Web SemiBold" })[LibForeverThemes.BaseTheme(id)]   -- an HD theme: its base's
     check("body font of " .. id, spec.bodyFont, body)
     check("no bare monochrome in " .. id, (spec.outline or ""):find("MONOCHROME") == nil, true)
 end
@@ -231,6 +231,17 @@ checkTrue("pixel handheld: set", entry.SetColor("HANDHELD"))
 check("pixel handheld: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.059 / 0.8, 0.122 / 0.8, 0.059 / 0.8, 1 }))
 entry.SetColor("PLUM")
 check("pixel plum: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb({ 0.23 / 0.8, 0.08 / 0.8, 0.16 / 0.8, 1 }))
+-- An HD colour: its own finished backdrop, untinted at the base's alpha, cut
+-- from 256 unit tiles (the other themes' are 128).
+Themes.Switch("WOOD_HD")
+checkTrue("wood hd ebony: set", entry.SetColor("EBONY"))
+check("wood hd ebony: its own texture, white", look(), PATH .. "WoodHDEbony 1,1,1,1")
+local p = ns.ThemeArt.Padding()
+check("wood hd: 256 unit tiles", backs[1]._coords[2], (Minimap:GetWidth() + 2 * p) / 256)
+entry.SetColor("OAK")
+Themes.Switch("WOOD")
+check("wood: 128 unit tiles", backs[1]._coords[2], (Minimap:GetWidth() + 2 * p) / 128)
+Themes.Switch("PIXEL")
 check("colour: another theme's id refused", select(2, Themes.SetColor("OAK")), "UNKNOWN")
 combat = true
 check("colour: combat refused for the theme in use", select(2, Themes.SetColor("NAVY")), "COMBAT")
@@ -280,13 +291,13 @@ local OWN_RING = { CONSOLE = { MINT = "0.306,0.929,0.69,1", AMBER = "1,0.69,0,1"
 for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
     if id ~= "CLASSIC" then
         Themes.Switch(id)
-        local chosen = entry.Color()
+        local chosen, base = entry.Color(), LibForeverThemes.BaseTheme(id)   -- an HD theme: its base's ring
         for _, c in ipairs(entry.Colors()) do
             Themes.SetColor(c)
-            if id == "WOOD" then
+            if base == "WOOD" then
                 check("ring " .. id .. " " .. c, db.borderStyle .. " " .. tostring(ring[1]._gradient ~= nil), "GOLD true")
             else
-                check("ring " .. id .. " " .. c, rgb(ring[1]._color), (OWN_RING[id] or {})[c] or RINGS[id])
+                check("ring " .. id .. " " .. c, rgb(ring[1]._color), (OWN_RING[id] or {})[c] or RINGS[base])
             end
         end
         Themes.SetColor(chosen)

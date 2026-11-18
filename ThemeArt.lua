@@ -17,7 +17,8 @@ ns.ThemeArt = ThemeArt
 
 -- The textures come with the embedded LibForeverThemes.
 local Lib = LibForeverThemes
--- The backdrop files are 128 px tiles, drawn at 128 UI units.
+-- The backdrop files are 128 px tiles, drawn at 128 UI units; an HD
+-- theme's are art.tile (Lib.TILE_HD) px, drawn at as many units.
 local TILE = 128
 local ORNAMENT_LEVEL = 3
 -- The corners in the order of a spec's `corners`, and the texture
@@ -52,23 +53,24 @@ local function create()
 end
 
 -- One strip of the backdrop: its rectangle from the map's top left corner
--- (x right, y down, the padding p outside), cut from one tiled picture.
-local function strip(texture, p, x1, y1, x2, y2)
+-- (x right, y down, the padding p outside), cut from one tiled picture
+-- of tile units a side.
+local function strip(texture, p, tile, x1, y1, x2, y2)
     texture:ClearAllPoints()
     texture:SetPoint("TOPLEFT", Minimap, "TOPLEFT", x1, -y1)
     texture:SetPoint("BOTTOMRIGHT", Minimap, "TOPLEFT", x2, -y2)
-    texture:SetTexCoord((x1 + p) / TILE, (x2 + p) / TILE, (y1 + p) / TILE, (y2 + p) / TILE)
+    texture:SetTexCoord((x1 + p) / tile, (x2 + p) / tile, (y1 + p) / tile, (y2 + p) / tile)
 end
 
 local function placeBack(a, p)
     local on = a.back ~= nil and p > 0
     for i = 1, 4 do backs[i]:SetShown(on) end
     if not on then return end
-    local s = Minimap:GetWidth()
-    strip(backs[1], p, -p, -p, s + p, 0)    -- top, corners included
-    strip(backs[2], p, -p, s, s + p, s + p) -- bottom
-    strip(backs[3], p, -p, 0, 0, s)         -- left
-    strip(backs[4], p, s, 0, s + p, s)      -- right
+    local s, tile = Minimap:GetWidth(), a.tile or TILE
+    strip(backs[1], p, tile, -p, -p, s + p, 0)    -- top, corners included
+    strip(backs[2], p, tile, -p, s, s + p, s + p) -- bottom
+    strip(backs[3], p, tile, -p, 0, 0, s)         -- left
+    strip(backs[4], p, tile, s, 0, s + p, s)      -- right
     local tint = ns.Themes.Tint(a) or { 1, 1, 1, 1 }
     for i = 1, 4 do
         backs[i]:SetTexture(Lib.Texture(ns.Themes.Back(a)), "REPEAT", "REPEAT")
