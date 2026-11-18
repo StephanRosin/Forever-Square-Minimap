@@ -234,11 +234,11 @@ check("pixel plum: grey texture tinted", look(), PATH .. "PixelBackGrey " .. rgb
 -- An HD colour: its own finished backdrop, untinted at the base's alpha, cut
 -- from 256 unit tiles (the other themes' are 128).
 Themes.Switch("WOOD_HD")
-checkTrue("wood hd ebony: set", entry.SetColor("EBONY"))
-check("wood hd ebony: its own texture, white", look(), PATH .. "WoodHDEbony 1,1,1,1")
+checkTrue("wood hd oak: set", entry.SetColor("OAK"))
+check("wood hd oak: its own texture, white", look(), PATH .. "WoodHDOak 1,1,1,1")
 local p = ns.ThemeArt.Padding()
 check("wood hd: 256 unit tiles", backs[1]._coords[2], (Minimap:GetWidth() + 2 * p) / 256)
-entry.SetColor("OAK")
+entry.SetColor("EBONY")
 Themes.Switch("WOOD")
 check("wood: 128 unit tiles", backs[1]._coords[2], (Minimap:GetWidth() + 2 * p) / 128)
 Themes.Switch("PIXEL")
