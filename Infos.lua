@@ -1,6 +1,6 @@
 --[[---------------------------------------------------------------------------
 Infos.lua -- the texts on and around the map: zone, server time, local time,
-FPS and latency, coordinates. Also the zone text's PvP colour and tooltip,
+FPS and latency, coordinates. Also the zone's control icon and tooltip,
 and the name of whoever pinged the map.
 
 Each one can be switched off, placed anywhere (a point on the map, or below
@@ -29,9 +29,9 @@ local TEMPLATE = { zone = "GameFontNormal", server = "GameFontNormalSmall", ["lo
 -- The defaults: zone on top, local time bottom centre, FPS and latency in
 -- the top right corner, coordinates in the bottom left one.
 Infos.DEFAULTS = {
-    -- pvpColour off: an update must not recolour the text existing users see.
+    -- pvpIcon off: an update must not change the text existing users see.
     zone = { show = true, anchor = "MAP", mapPoint = "TOP", point = "TOP", x = 0, y = 0,
-        font = "Friz Quadrata", size = 11, pvpColour = false },
+        font = "Friz Quadrata", size = 11, pvpIcon = false },
     -- Right under the zone text; moves with it when the zone text grows.
     server = { show = true, anchor = "ZONE", mapPoint = "BOTTOM", point = "TOP", x = 0, y = -1,
         font = "DEFAULT", size = 11 },
@@ -160,66 +160,86 @@ function ns.PerfText(fps, ping)
     return a .. "\n" .. b
 end
 
--- Zone PvP status ---------------------------------------------------------------
--- Blizzard's colours and tooltip lines (Blizzard_Minimap, Minimap_Update and
--- Minimap_SetTooltip). label: Blizzard's localised string; faction: the line
--- needs the controlling faction's name, and is left out without one.
-local PVP = {
-    sanctuary = { 0.41, 0.8, 0.94, label = "SANCTUARY_TERRITORY" },
-    arena     = { 1.0, 0.1, 0.1, label = "FREE_FOR_ALL_TERRITORY" },
-    friendly  = { 0.1, 1.0, 0.1, label = "FACTION_CONTROLLED_TERRITORY", faction = true },
-    hostile   = { 1.0, 0.1, 0.1, label = "FACTION_CONTROLLED_TERRITORY", faction = true },
-    contested = { 1.0, 0.7, 0.0, label = "CONTESTED_TERRITORY" },
-    combat    = { 1.0, 0.1, 0.1, label = "COMBAT_ZONE" },
+-- Zone control ---------------------------------------------------------------
+-- Forever's server reports no PvP status (C_PvP.GetZonePVPInfo is empty, seen
+-- in game 19.11.2026), so the classic split is kept here by uiMapID (Forever
+-- uses the classic IDs; checked against OpenMap's Forever zone list): the
+-- starting zones and capitals belong to a faction, the rest of the world is
+-- contested. Forever's own zones: Riverglades (2548) contested, Zephras Isle
+-- (2521, the Skyborne's start) a sanctuary (warcraft.wiki.gg), shown only in
+-- the tooltip. Not listed (no icon): instances and Moonglade.
+local ALLIANCE, HORDE, CONTESTED, SANCTUARY = "Alliance", "Horde", "Contested", "Sanctuary"
+Infos.ZONE_CONTROL = {
+    -- Dun Morogh, Elwynn Forest, Loch Modan, Westfall, Teldrassil, Darkshore,
+    -- Stormwind, Ironforge, Darnassus
+    [1426] = ALLIANCE, [1429] = ALLIANCE, [1432] = ALLIANCE, [1436] = ALLIANCE, [1438] = ALLIANCE,
+    [1439] = ALLIANCE, [1453] = ALLIANCE, [1455] = ALLIANCE, [1457] = ALLIANCE,
+    -- Durotar, Mulgore, The Barrens, Tirisfal Glades, Silverpine Forest,
+    -- Orgrimmar, Thunder Bluff, Undercity
+    [1411] = HORDE, [1412] = HORDE, [1413] = HORDE, [1420] = HORDE, [1421] = HORDE,
+    [1454] = HORDE, [1456] = HORDE, [1458] = HORDE,
+    [2521] = SANCTUARY,
 }
--- GameFontNormal's gold, the zone text's colour without PvP colouring.
-local NORMAL = { 1.0, 0.82, 0.0 }
-
--- The zone's PvP type, faction name; Forever has C_PvP, older clients the global.
-local function zonePvP()
-    if C_PvP and C_PvP.GetZonePVPInfo then
-        local pvpType, _, faction = C_PvP.GetZonePVPInfo()
-        return pvpType, faction
-    end
-    if GetZonePVPInfo then
-        local pvpType, _, faction = GetZonePVPInfo()
-        return pvpType, faction
-    end
+-- Alterac Mountains .. Wetlands, Ashenvale .. Winterspring without the ones
+-- above and Moonglade (1450).
+for _, id in ipairs({ 1416, 1417, 1418, 1419, 1422, 1423, 1424, 1425, 1427, 1428, 1430, 1431, 1433, 1434,
+        1435, 1437, 1440, 1441, 1442, 1443, 1444, 1445, 1446, 1447, 1448, 1449, 1451, 1452, 2548 }) do
+    Infos.ZONE_CONTROL[id] = CONTESTED
 end
 
--- The zone text's colour for a PvP type: Blizzard's, gold for none
--- (a city of no faction, an instance) or an unknown type.
-function ns.ZonePvPColour(pvpType)
-    local c = PVP[pvpType] or NORMAL
-    return c[1], c[2], c[3]
+-- Blizzard's small group crests and the battleground's crossed swords (the
+-- left upper quarter of its texture), inline at the text's height.
+local ZONE_ICONS = {
+    [ALLIANCE] = "|TInterface\\GroupFrame\\UI-Group-PVP-Alliance:0|t",
+    [HORDE] = "|TInterface\\GroupFrame\\UI-Group-PVP-Horde:0|t",
+    [CONTESTED] = "|TInterface\\WorldStateFrame\\CombatSwords:0:0:0:0:64:64:0:32:0:32|t",
+}
+
+local function currentMap()
+    return C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+end
+
+-- The zone text with the control icon behind it; plain where the map is not
+-- in the table.
+function ns.ZoneWithIcon(zone, mapID)
+    local icon = ZONE_ICONS[Infos.ZONE_CONTROL[mapID]]
+    if not icon then return zone end
+    return zone .. " " .. icon
 end
 
 -- The tooltip as lines { text, r, g, b }: the zone in white, then the subzone
--- and the PvP status in the type's colour. Pure; labels are Blizzard's
--- format strings, passed in so the test needs no globals.
-function ns.ZoneTooltipLines(pvpType, faction, zone, subzone, labels)
+-- and who controls it, green for the player's side, red for the other,
+-- orange contested (Blizzard's colours). Pure; labels are Blizzard's strings,
+-- passed in so the test needs no globals.
+local GOLD, GREEN, RED, ORANGE, BLUE = { 1, 0.82, 0 }, { 0.1, 1, 0.1 }, { 1, 0.1, 0.1 }, { 1, 0.7, 0 },
+    { 0.41, 0.8, 0.94 }
+function ns.ZoneTooltipLines(control, playerFaction, zone, subzone, labels)
     if subzone == zone then subzone = "" end
     local lines = { { zone or "", 1, 1, 1 } }
-    local c = PVP[pvpType]
-    if not c then
-        lines[#lines + 1] = { subzone or "", NORMAL[1], NORMAL[2], NORMAL[3] }
-        return lines
+    local c, status = GOLD, nil
+    if control == CONTESTED then
+        c, status = ORANGE, labels.CONTESTED_TERRITORY
+    elseif control == SANCTUARY then
+        c, status = BLUE, labels.SANCTUARY_TERRITORY
+    elseif control then
+        c = control == playerFaction and GREEN or RED
+        local name = control == ALLIANCE and labels.FACTION_ALLIANCE or labels.FACTION_HORDE
+        status = (labels.FACTION_CONTROLLED_TERRITORY or "(%s)"):format(name or control)
     end
-    if c.faction and (not faction or faction == "") then return lines end
-    local label = labels[c.label] or ""
-    if c.faction then label = label:format(faction) end
-    lines[#lines + 1] = { subzone or "", c[1], c[2], c[3] }
-    lines[#lines + 1] = { label, c[1], c[2], c[3] }
+    if subzone ~= "" then lines[#lines + 1] = { subzone, c[1], c[2], c[3] } end
+    if status then lines[#lines + 1] = { status, c[1], c[2], c[3] } end
     return lines
 end
 
 local function showZoneTooltip(owner)
-    local pvpType, faction = zonePvP()
     local labels = {}
-    for _, c in pairs(PVP) do labels[c.label] = _G[c.label] end
+    for _, key in ipairs({ "CONTESTED_TERRITORY", "SANCTUARY_TERRITORY", "FACTION_CONTROLLED_TERRITORY", "FACTION_ALLIANCE", "FACTION_HORDE" }) do
+        labels[key] = _G[key]
+    end
+    local faction = UnitFactionGroup and UnitFactionGroup("player")
     GameTooltip:SetOwner(owner, "ANCHOR_LEFT")
-    for _, line in ipairs(ns.ZoneTooltipLines(pvpType, faction, GetZoneText and GetZoneText(),
-            GetSubZoneText and GetSubZoneText(), labels)) do
+    for _, line in ipairs(ns.ZoneTooltipLines(Infos.ZONE_CONTROL[currentMap()], faction,
+            GetZoneText and GetZoneText(), GetSubZoneText and GetSubZoneText(), labels)) do
         GameTooltip:AddLine(line[1], line[2], line[3], line[4])
     end
     GameTooltip:Show()
@@ -461,12 +481,8 @@ end
 function Infos.Update()
     if not texts.zone then return end
     local zone = (GetMinimapZoneText and GetMinimapZoneText()) or (GetZoneText and GetZoneText()) or ""
+    if Infos.Get("zone", "pvpIcon") then zone = ns.ZoneWithIcon(zone, currentMap()) end
     texts.zone:SetText(zone)
-    if Infos.Get("zone", "pvpColour") then
-        texts.zone:SetTextColor(ns.ZonePvPColour((zonePvP())))
-    else
-        texts.zone:SetTextColor(NORMAL[1], NORMAL[2], NORMAL[3])
-    end
 
     -- GetGameTime is the server time, the one Blizzard's clock showed.
     local hour, minute

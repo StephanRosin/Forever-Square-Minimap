@@ -382,27 +382,36 @@ C_Map = nil
 ns.DB().infos = nil
 I.Apply()
 
-section("Zone text: PvP colour and tooltip")
+section("Zone text: faction icon and tooltip")
 local function rgb(r, g, b) return ("%.2f %.2f %.2f"):format(r, g, b) end
-check("contested orange", rgb(ns.ZonePvPColour("contested")), "1.00 0.70 0.00")
-check("sanctuary blue", rgb(ns.ZonePvPColour("sanctuary")), "0.41 0.80 0.94")
-check("no type: gold", rgb(ns.ZonePvPColour(nil)), "1.00 0.82 0.00")
-check("unknown type: gold", rgb(ns.ZonePvPColour("future")), "1.00 0.82 0.00")
-local labels = { FACTION_CONTROLLED_TERRITORY = "(%s Territory)", CONTESTED_TERRITORY = "(Contested Territory)" }
-local lines = ns.ZoneTooltipLines("friendly", "Horde", "Durotar", "Razor Hill", labels)
-check("zone first, white", lines[1][1] .. rgb(lines[1][2], lines[1][3], lines[1][4]), "Durotar1.00 1.00 1.00")
-check("subzone in green", lines[2][1] .. rgb(lines[2][2], lines[2][3], lines[2][4]), "Razor Hill0.10 1.00 0.10")
-check("faction filled in", lines[3][1], "(Horde Territory)")
-check("friendly without faction: zone only", #ns.ZoneTooltipLines("friendly", "", "Durotar", "Razor Hill", labels), 1)
-check("subzone = zone left empty", ns.ZoneTooltipLines("contested", nil, "Tanaris", "Tanaris", labels)[2][1], "")
-check("no type: subzone in gold", #ns.ZoneTooltipLines(nil, nil, "Tanaris", "Gadgetzan", labels), 2)
-check("off by default: gold", rgb(unpack(I.texts.zone._color)), "1.00 0.82 0.00")
-C_PvP = { GetZonePVPInfo = function() return "hostile", false, "Alliance" end }
-I.Set("zone", "pvpColour", true)
-check("on: hostile red", rgb(unpack(I.texts.zone._color)), "1.00 0.10 0.10")
-I.Set("zone", "pvpColour", false)
-check("off again: gold", rgb(unpack(I.texts.zone._color)), "1.00 0.82 0.00")
-C_PvP = nil
+check("Dun Morogh: Alliance", I.ZONE_CONTROL[1426], "Alliance")
+check("Durotar: Horde", I.ZONE_CONTROL[1411], "Horde")
+check("Tanaris: contested", I.ZONE_CONTROL[1446], "Contested")
+check("Riverglades: contested", I.ZONE_CONTROL[2548], "Contested")
+check("Zephras Isle: sanctuary", I.ZONE_CONTROL[2521], "Sanctuary")
+check("Moonglade: not listed", I.ZONE_CONTROL[1450], nil)
+check("icon behind the name", ns.ZoneWithIcon("Dun Morogh", 1426), "Dun Morogh |TInterface\\GroupFrame\\UI-Group-PVP-Alliance:0|t")
+check("swords for contested", ns.ZoneWithIcon("Tanaris", 1446):find("CombatSwords", 1, true) ~= nil, true)
+check("sanctuary: no icon", ns.ZoneWithIcon("Zephras Isle", 2521), "Zephras Isle")
+check("unknown map: plain", ns.ZoneWithIcon("Deadmines", 1581), "Deadmines")
+check("no map: plain", ns.ZoneWithIcon("Somewhere", nil), "Somewhere")
+local labels = { FACTION_CONTROLLED_TERRITORY = "(%s Territory)", CONTESTED_TERRITORY = "(Contested Territory)",
+    SANCTUARY_TERRITORY = "(Sanctuary)", FACTION_ALLIANCE = "Alliance", FACTION_HORDE = "Horde" }
+local lines = ns.ZoneTooltipLines("Alliance", "Alliance", "Dun Morogh", "Kharanos", labels)
+check("zone first, white", lines[1][1] .. rgb(lines[1][2], lines[1][3], lines[1][4]), "Dun Morogh1.00 1.00 1.00")
+check("own side green", lines[2][1] .. rgb(lines[2][2], lines[2][3], lines[2][4]), "Kharanos0.10 1.00 0.10")
+check("faction filled in", lines[3][1], "(Alliance Territory)")
+check("other side red", rgb(unpack(ns.ZoneTooltipLines("Horde", "Alliance", "Durotar", "Razor Hill", labels)[2], 2)), "1.00 0.10 0.10")
+check("sanctuary blue", ns.ZoneTooltipLines("Sanctuary", "Horde", "Zephras Isle", "", labels)[2][1], "(Sanctuary)")
+check("subzone = zone left out", #ns.ZoneTooltipLines("Contested", nil, "Tanaris", "Tanaris", labels), 2)
+check("unknown: zone and subzone only", #ns.ZoneTooltipLines(nil, nil, "Deadmines", "Mast Room", labels), 2)
+C_Map = { GetBestMapForUnit = function() return 1446 end }
+check("off by default: plain", I.texts.zone._text, "Gadgetzan")
+I.Set("zone", "pvpIcon", true)
+check("on: icon behind the zone", I.texts.zone._text:find("^Gadgetzan |T") ~= nil, true)
+I.Set("zone", "pvpIcon", false)
+check("off again: plain", I.texts.zone._text, "Gadgetzan")
+C_Map = nil
 I.Set("zone", "show", false)
 check("no tooltip area without the text", I.texts.zoneHover:IsShown(), false)
 ns.DB().infos = nil

@@ -186,7 +186,7 @@ local function infoSection(kind)
         { type = "check", label = "OPT_PERF_SHOW", get = get("show"), set = set("show") },
     }
     if kind == "zone" then
-        items[#items + 1] = { type = "check", label = "OPT_ZONE_PVP", get = get("pvpColour"), set = set("pvpColour") }
+        items[#items + 1] = { type = "check", label = "OPT_ZONE_PVP", get = get("pvpIcon"), set = set("pvpIcon") }
     end
     if kind == "server" then
         items[#items + 1] = { type = "select", label = "OPT_INFO_ANCHOR",
