@@ -131,7 +131,7 @@ check("parchment: coordinates in the standard font", Infos.Get("coords", "font")
 for id, spec in pairs(Themes.SPECS) do
     local body = ({ WOOD = "Friz Quadrata", PARCHMENT = "Friz Quadrata", FROST = "Julius Sans One",
         GLASS = "Friz Quadrata", COMIC = "Friz Quadrata", SWISS = "Inter Tight", CONSOLE = "IBM Plex Mono",
-        PITWALL = "Titillium Web SemiBold" })[LibForeverThemes.BaseTheme(id)]   -- an HD theme: its base's
+        PITWALL = "Titillium Web SemiBold", AZEROTH = "Friz Quadrata", GOBLIN = "Rubik Medium" })[LibForeverThemes.BaseTheme(id)]   -- an HD theme: its base's
     check("body font of " .. id, spec.bodyFont, body)
     check("no bare monochrome in " .. id, (spec.outline or ""):find("MONOCHROME") == nil, true)
 end
@@ -333,7 +333,8 @@ end
 -- the theme's own; only Console's colours and Pixel's Handheld recolour it.
 local RINGS = { TECH = "0.25,0.88,0.94,0.9", PARCHMENT = "0.29,0.2,0.12,1", RUNESTONE = "0.1,0.1,0.12,1",
     GLASS = "0.07,0.06,0.05,1", COMIC = "0.07,0.07,0.07,1", FROST = "0.86,0.96,1,0.8", PIXEL = "1,0.95,0.91,1",
-    SWISS = "0.165,0.165,0.165,1", PITWALL = "0.043,0.047,0.055,1" }
+    SWISS = "0.165,0.165,0.165,1", PITWALL = "0.043,0.047,0.055,1", AZEROTH = "0.79,0.635,0.29,1",
+    GOBLIN = "0.23,0.11,0.05,1" }
 local OWN_RING = { CONSOLE = { MINT = "0.306,0.929,0.69,1", AMBER = "1,0.69,0,1", PHOSPHOR = "0.224,1,0.078,1",
     VIOLET = "0.627,0.471,1,1" }, PIXEL = { HANDHELD = "0.784,0.941,0.439,1" } }
 for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
@@ -457,17 +458,45 @@ local kept = ns.DB().themeSets.PIXEL
 check("stored set untouched at login", kept.borderSize .. " " .. kept.infos.zone.font .. " " .. kept.infos.zone.size,
     "5 Morpheus 20")
 
+-- The framed themes (LibForeverThemes 10): the library's frame round the
+-- ring's outside, the ornaments on its corners, no title band on the map.
+local frames = select(4, ns.ThemeArt.Parts())
+Themes.Switch("AZEROTH")
+check("azeroth: fonts", Infos.Get("zone", "font") .. "/" .. Infos.Get("server", "font"), "Cinzel/Friz Quadrata")
+check("azeroth: parchment round the map", backs[1]._texture, PATH .. "AzerothParchment")
+local framed = 0
+for _, f in ipairs(frames) do
+    if f:IsShown() and f._texture == PATH .. "WoodHDWalnut" and f._horizTile and f._vertTile then framed = framed + 1 end
+end
+check("azeroth: walnut frame on four sides, repeating", framed, 4)
+-- The top strip's lower right corner: the frame's outer edge, the ring's.
+local outer, top = ns.api.Reach(), frames[1]._anchor
+check("azeroth: frame outside the ring, 7 wide", top[1] .. " " .. top[3] .. " " .. top[4] .. " " .. top[5],
+    "BOTTOMRIGHT TOPRIGHT " .. outer .. " " .. (outer - 7))
+check("azeroth: gold corners on the frame's outer corner",
+    ornaments[1]:IsShown() and ornaments[1]._texture == PATH .. "Bracket" and ornaments[1]._anchor[4], -outer)
+Themes.Switch("GOBLIN")
+check("goblin: fonts", Infos.Get("zone", "font") .. "/" .. Infos.Get("server", "font"), "Bungee/Rubik Medium")
+check("goblin: zone a point smaller, clocks as they were", Infos.Get("zone", "size") .. "/" .. Infos.Get("server", "size"),
+    (Infos.DEFAULTS.zone.size - 1) .. "/" .. Infos.DEFAULTS.server.size)
+check("goblin: copper frame", frames[1]:IsShown() and frames[1]._texture, PATH .. "GoblinCopper")
+check("goblin: rivets", ornaments[4]:IsShown() and ornaments[4]._texture, PATH .. "Rivet")
+Themes.Switch("SWISS")
+check("swiss after them: no frame", frames[1]:IsShown() or frames[4]:IsShown(), false)
+Themes.Switch("CLASSIC")
+check("classic after them: no frame", frames[1]:IsShown(), false)
+
 -- The shipped files are there, in the embedded library.
 local MEDIA = ROOT .. "/Libs/LibForeverThemes/Media/"
 for _, name in ipairs({ "Fonts/OFL.txt", "Fonts/FONTS.txt", "Fonts/VT323-Regular.ttf", "Themes/WoodBack.tga",
-    "Themes/Seal.tga" }) do
+    "Themes/Seal.tga", "Fonts/Bungee-Regular.ttf", "Fonts/Rubik-Medium.ttf", "Fonts/Alegreya-Regular.ttf" }) do
     local f = io.open(MEDIA .. name, "rb")
     check("shipped: " .. name, f ~= nil, true)
     if f then f:close() end
 end
 for id, spec in pairs(ns.Themes.SPECS) do
     local art = spec.art or {}
-    for _, file in ipairs({ art.back, art.ornament }) do
+    for _, file in pairs({ art.back, art.ornament, art.frame }) do
         local f = io.open(MEDIA .. "Themes/" .. file .. ".tga", "rb")
         check("texture of " .. id .. ": " .. file, f ~= nil, true)
         if f then f:close() end

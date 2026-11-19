@@ -39,7 +39,8 @@ Themes.CLASSIC = Lib.CLASSIC
 -- ornamentColor and rule with: padding = the backdrop's width between map
 -- and border; ornamentSize, ornamentInset = how far in from the border's
 -- outer corner (never out: nothing reaches past Classic's edge); hardShadow
--- = offset of a solid shadow. The map is drawn smaller by what all this
+-- = offset of a solid shadow; the library's frame (frameSize wide) runs
+-- round the ring's outside, the ornaments then on its corners. The map is drawn smaller by what all this
 -- reaches out further than Classic's border (SquareMinimap.lua, ThemeInset).
 -- The theme lists come from Lib.SpecIds(Themes.SPECS) at use (the library's
 -- order; stored is the id, not the place). The HD themes (WOOD_HD, ...)
@@ -103,6 +104,23 @@ Themes.SPECS = Lib.Specs({
     PITWALL = {
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.PITWALL.rim },
         art = { padding = 4 },
+    },
+    -- A window of the game's own world: parchment round the map, a gold ring,
+    -- the library's walnut frame outside it with gold corners. No banner: the
+    -- map has no title row, and one behind the zone text would cover the map.
+    AZEROTH = {
+        -- Alegreya's old-style figures read badly on the map: clocks in Friz.
+        bodyFont = "Friz Quadrata",
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.AZEROTH.rim },
+        art = { padding = 3, ornamentSize = 16, ornamentInset = 0 },
+    },
+    -- A goblin workshop: sooty metal round the map in a copper frame with
+    -- rivets. No hazard strip: no title row to carry it.
+    GOBLIN = {
+        -- Bungee runs wide: a point smaller keeps the zone name short.
+        fontSizeAdd = -1,
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.GOBLIN.rim },
+        art = { padding = 3, ornamentSize = 10, ornamentInset = 0 },
     },
 }, true)
 

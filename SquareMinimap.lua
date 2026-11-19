@@ -484,10 +484,10 @@ local function BorderColor()
 end
 
 -- How far the look reaches out of the drawn map: a theme's padding, the
--- ring, a theme's solid shadow.
+-- ring, a theme's frame and solid shadow.
 local function Reach(db, art)
     local ring = BorderStyle(db) == "NONE" and 0 or BorderSize(db) * OnePixel()
-    return (art.padding or 0) + ring + (art.hardShadow or 0)
+    return (art.padding or 0) + ring + ns.ThemeArt.FrameSize(art) + (art.hardShadow or 0)
 end
 
 -- How much smaller the map is drawn under a theme: what its look reaches

@@ -1,7 +1,8 @@
 --[[---------------------------------------------------------------------------
 ThemeArt.lua -- the theme's art beyond settings (Themes.lua): a tiled
-backdrop in a padding between the map and its border, corner ornaments at the
-border's outer corners, a solid shadow outside it.
+backdrop in a padding between the map and its border, a material frame round
+the border's outside (LibForeverThemes' frame), corner ornaments at the outer
+corners, a solid shadow outside it.
 
 Everything lies OUTSIDE the map, so the map stays fully visible whatever the
 frame levels: the backdrop is four strips round it (texture coordinates of
@@ -26,7 +27,7 @@ local ORNAMENT_LEVEL = 3
 local POINTS = { "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT" }
 local MIRROR = { { 0, 1, 0, 1 }, { 1, 0, 0, 1 }, { 0, 1, 1, 0 }, { 1, 0, 1, 0 } }
 
-local holder, backs, shadows, ornaments
+local holder, backs, shadows, ornaments, frames
 
 local function art()
     return ns.Themes.Spec(ns.Themes.Current()).art or {}
@@ -38,16 +39,24 @@ function ThemeArt.Padding()
     return art().padding or 0
 end
 
+-- The frame's width outside the border, in UI units; 0 without one.
+function ThemeArt.FrameSize(a)
+    a = a or art()
+    return a.frame and a.frameSize or 0
+end
+
 local function create()
     holder = CreateFrame("Frame", "ForeverSquareMinimapTheme", Minimap)
     holder:SetAllPoints(Minimap)
-    backs, shadows, ornaments = {}, {}, {}
+    backs, shadows, ornaments, frames = {}, {}, {}, {}
     for i = 1, 4 do backs[i] = holder:CreateTexture(nil, "BACKGROUND") end
     for i = 1, 2 do shadows[i] = holder:CreateTexture(nil, "BACKGROUND") end
     local over = CreateFrame("Frame", nil, holder)
     over:SetAllPoints(Minimap)
     local level = Minimap:GetFrameLevel()
     if type(level) == "number" then over:SetFrameLevel(level + ORNAMENT_LEVEL) end
+    -- The frame under the ornaments.
+    for i = 1, 4 do frames[i] = over:CreateTexture(nil, "ARTWORK") end
     for i = 1, 4 do ornaments[i] = over:CreateTexture(nil, "OVERLAY") end
     ThemeArt.rule = over:CreateTexture(nil, "OVERLAY")
 end
@@ -94,6 +103,32 @@ local function placeShadow(a, extent)
     for i = 1, 2 do shadows[i]:SetColorTexture(0, 0, 0, 1) end
 end
 
+-- The frame's four strips from extent out to extent + its width, the top
+-- and bottom ones across the corners; its material repeats at its own size.
+local function placeFrame(a, extent)
+    local w = ThemeArt.FrameSize(a)
+    for i = 1, 4 do frames[i]:SetShown(w > 0) end
+    if w <= 0 then return 0 end
+    local o = extent + w
+    local spots = {
+        { "TOPLEFT", -o, o, "TOPRIGHT", o, extent },
+        { "BOTTOMLEFT", -o, -extent, "BOTTOMRIGHT", o, -o },
+        { "TOPLEFT", -o, extent, "BOTTOMLEFT", -extent, -extent },
+        { "TOPRIGHT", extent, extent, "BOTTOMRIGHT", o, -extent },
+    }
+    for i, piece in ipairs(frames) do
+        local p = spots[i]
+        piece:ClearAllPoints()
+        piece:SetPoint("TOPLEFT", Minimap, p[1], p[2], p[3])
+        piece:SetPoint("BOTTOMRIGHT", Minimap, p[4], p[5], p[6])
+        piece:SetTexture(Lib.Texture(a.frame), "REPEAT", "REPEAT")
+        piece:SetHorizTile(true)
+        piece:SetVertTile(true)
+        piece:SetVertexColor(1, 1, 1, 1)
+    end
+    return w
+end
+
 -- Ornaments at the border's outer corners, ornamentInset inwards.
 local function placeOrnaments(a, extent)
     local wanted = {}
@@ -135,10 +170,11 @@ function ThemeArt.Apply(extent)
     if not holder then create() end
     local a = art()
     placeBack(a, ThemeArt.Padding())
-    placeShadow(a, extent)
-    placeOrnaments(a, extent)
-    placeRule(a, extent)
+    local outer = extent + placeFrame(a, extent)
+    placeShadow(a, outer)
+    placeOrnaments(a, outer)
+    placeRule(a, outer)
 end
 
 -- Tests only.
-function ThemeArt.Parts() return backs, shadows, ornaments end
+function ThemeArt.Parts() return backs, shadows, ornaments, frames end

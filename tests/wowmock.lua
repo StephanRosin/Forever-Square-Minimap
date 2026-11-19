@@ -46,6 +46,8 @@ local function newWidget(name)
         function t:SetVertexColor(r, g, b, a) self._color = { r, g, b, a } end
         function t:SetTexture(file) self._texture = file end
         function t:SetTexCoord(...) self._coords = { ... } end
+        function t:SetHorizTile(v) self._horizTile = v == true end
+        function t:SetVertTile(v) self._vertTile = v == true end
         function t:SetGradient(dir, a, b) self._gradient = { dir, a, b } end
         function t:SetHeight(v) self._h = v end
         function t:SetWidth(v) self._w = v end
