@@ -105,15 +105,6 @@ Themes.SPECS = Lib.Specs({
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.PITWALL.rim },
         art = { padding = 4 },
     },
-    -- A window of the game's own world: parchment round the map, a gold ring,
-    -- the library's walnut frame outside it with gold corners. No banner: the
-    -- map has no title row, and one behind the zone text would cover the map.
-    AZEROTH = {
-        -- Alegreya's old-style figures read badly on the map: clocks in Friz.
-        bodyFont = "Friz Quadrata",
-        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.AZEROTH.rim },
-        art = { padding = 3, ornamentSize = 16, ornamentInset = 0 },
-    },
     -- A goblin workshop: sooty metal round the map in a copper frame with
     -- rivets. No hazard strip: no title row to carry it.
     GOBLIN = {
@@ -413,10 +404,30 @@ function Themes.Restore(undo)
     return true
 end
 
+-- A theme that is gone (Azeroth, LibForeverThemes 13) still saved: the
+-- stored Classic set comes back as it was (without one the settings stay),
+-- the gone theme's set is dropped.
+local function leaveRemoved()
+    local db = ns.DB()
+    if db.theme == nil or Themes.SPECS[db.theme] then return end
+    local sets = type(db.themeSets) == "table" and db.themeSets or nil
+    local classic = sets and sets[Themes.CLASSIC]
+    if sets then sets[Themes.CLASSIC], sets[db.theme] = nil, nil end
+    if classic then
+        for key in pairs(db) do
+            if key ~= "themeSets" then db[key] = nil end
+        end
+        for key, value in pairs(copy(classic)) do db[key] = value end
+    end
+    db.theme = nil
+end
+
 -- At login and after a profile switch, before the look is applied: a theme
+-- that is gone leaves for Classic (leaveRemoved); a theme
 -- in use made under an older revision (Lib.NeedsReseed) is made anew from CLASSIC, quietly. A
 -- profile that never had a theme is left alone.
 function Themes.Upgrade()
+    leaveRemoved()
     local db = ns.DB()
     local sets = db.themeSets
     if type(sets) ~= "table" then return end
