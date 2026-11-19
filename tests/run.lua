@@ -671,6 +671,15 @@ ns.RefreshOptions()
 local items = colourRow().opts.items()
 check("colours: wood's own, then HD", tostring(colourRow():IsShown()) .. " " .. #items .. " " .. items[1].text .. " / " .. items[7].text,
     "true 10 " .. ns.L.THEME_COLOR_WOOD_OAK .. " / HD " .. ns.L.THEME_COLOR_WOOD_HD_EBONY)
+-- The theme row: the base shown already (HD shows as its base) changes nothing.
+local function themeRow()
+    for _, f in ipairs(M.frames) do
+        if f.opts and f.label and f.label._text == ns.L.OPT_THEME then return f end
+    end
+end
+ns.Themes.Switch("WOOD_HD")
+themeRow().opts.set("WOOD")
+check("theme row: wood again keeps wood hd", ns.Themes.Current(), "WOOD_HD")
 ns.Themes.Switch("CLASSIC")
 ns.RefreshOptions()
 check("colours: hidden again", colourRow():IsShown(), false)

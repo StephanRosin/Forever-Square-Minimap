@@ -50,6 +50,8 @@ local function themeSection()
           disabled = followsHub,
           get = function() return LibForeverThemes.BaseTheme(Themes.Current()) end,
           set = function(id)
+              -- The theme shown already (an HD theme shows as its base): nothing to do.
+              if id == LibForeverThemes.BaseTheme(Themes.Current()) then return end
               local ok, why = Themes.Switch(id)
               themeRefused(why)
               -- Every value on the page belongs to the theme.
