@@ -564,10 +564,14 @@ function Infos.CreatePing()
     fs:SetPoint("BOTTOM", Minimap, "CENTER", 0, PING_ABOVE_ARROW)
     fs:Hide()
     texts.ping = fs
-    local events = CreateFrame("Frame", nil, Minimap)
-    -- An unknown event name throws and would stop the rest of the file.
-    if not C_EventUtils or C_EventUtils.IsEventValid("MINIMAP_PING") then
-        events:RegisterEvent("MINIMAP_PING")
+    -- Forever: a callback event only, RegisterEvent rejects it as unknown
+    -- (seen in game 19.11.2026; Blizzard's own minimap uses the callback). The
+    -- global callback gets no owner first, then the payload.
+    if C_EventUtils and not C_EventUtils.IsEventValid("MINIMAP_PING") and RegisterEventCallback then
+        RegisterEventCallback("MINIMAP_PING", function(_, unit) Infos.ShowPing(unit) end)
+        return
     end
+    local events = CreateFrame("Frame", nil, Minimap)
+    events:RegisterEvent("MINIMAP_PING")
     events:SetScript("OnEvent", function(_, _, unit) Infos.ShowPing(unit) end)
 end

@@ -449,6 +449,17 @@ check("switched off: hidden", I.texts.ping:IsShown(), false)
 M.Fire("MINIMAP_PING", "party1", 0, 0)
 check("switched off: stays hidden", I.texts.ping:IsShown(), false)
 ns.DB().pingName = nil
+-- Forever: only a callback event; the global callback passes no owner first.
+function UnitClass(u) return "Warrior", roster[u][2] end
+local callbacks = {}
+C_EventUtils = { IsEventValid = function() return false end }
+RegisterEventCallback = function(event, fn) callbacks[event] = fn end
+I.CreatePing()
+check("Forever: registered as a callback", type(callbacks.MINIMAP_PING), "function")
+callbacks.MINIMAP_PING(nil, "party1", 0, 0)
+check("Forever: name shown", I.texts.ping._text, "Brannor")
+check("Forever: shown", I.texts.ping:IsShown(), true)
+C_EventUtils, RegisterEventCallback = nil, nil
 
 section("Moving the whole map")
 local function mapAnchor() local a = M.placed["Minimap"]; return a and a[2], a and a[3] end
