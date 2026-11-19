@@ -332,11 +332,6 @@ local function textsTab()
           get = function() return Infos.ClockFormat() end, set = function(v) Infos.SetClockFormat(v) end },
     }
     for _, kind in ipairs({ "zone", "server", "local" }) do add(items, infoSection(kind)) end
-    add(items, {
-        { type = "header", label = "OPT_PING" },
-        { type = "check", label = "OPT_PING_NAME",
-          get = function() return Infos.PingEnabled() end, set = function(v) Infos.SetPingEnabled(v) end },
-    })
     return items
 end
 

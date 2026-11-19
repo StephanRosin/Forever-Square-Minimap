@@ -418,49 +418,6 @@ ns.DB().infos = nil
 I.Apply()
 check("tooltip area with the text", I.texts.zoneHover:IsShown(), true)
 
-section("Who pinged")
-local roster = { party1 = { "Brannor", "WARRIOR" } }
-function UnitName(u) return roster[u][1] end
-function UnitClass(u) return "Warrior", roster[u][2] end
-RAID_CLASS_COLORS = { WARRIOR = { r = 0.78, g = 0.61, b = 0.43 } }
-check("hidden before a ping", I.texts.ping:IsShown(), false)
-check("on by default", I.PingEnabled(), true)
-local before = #M.timers
-M.Fire("MINIMAP_PING", "party1", 0.1, -0.2)
-check("name shown", I.texts.ping._text, "Brannor")
-check("in class colour", rgb(unpack(I.texts.ping._color)), "0.78 0.61 0.43")
-check("shown", I.texts.ping:IsShown(), true)
-M.Fire("MINIMAP_PING", "party1", 0, 0)
-M.timers[before + 1]()
-check("an older timer leaves a newer ping", I.texts.ping:IsShown(), true)
-M.timers[before + 2]()
-check("hidden after its time", I.texts.ping:IsShown(), false)
--- Forever: a secret unit may not reach UnitClass from addon code.
-local secretUnit = {}
-issecretvalue = function(v) return v == secretUnit end
-roster[secretUnit] = { "Hidden" }
-function UnitClass() error("UnitClass called with a secret") end
-M.Fire("MINIMAP_PING", secretUnit, 0, 0)
-check("secret unit: name shown", I.texts.ping._text, "Hidden")
-check("secret unit: white", rgb(unpack(I.texts.ping._color)), "1.00 1.00 1.00")
-issecretvalue = nil
-I.SetPingEnabled(false)
-check("switched off: hidden", I.texts.ping:IsShown(), false)
-M.Fire("MINIMAP_PING", "party1", 0, 0)
-check("switched off: stays hidden", I.texts.ping:IsShown(), false)
-ns.DB().pingName = nil
--- Forever: only a callback event; the global callback passes no owner first.
-function UnitClass(u) return "Warrior", roster[u][2] end
-local callbacks = {}
-C_EventUtils = { IsEventValid = function() return false end }
-RegisterEventCallback = function(event, fn) callbacks[event] = fn end
-I.CreatePing()
-check("Forever: registered as a callback", type(callbacks.MINIMAP_PING), "function")
-callbacks.MINIMAP_PING(nil, "party1", 0, 0)
-check("Forever: name shown", I.texts.ping._text, "Brannor")
-check("Forever: shown", I.texts.ping:IsShown(), true)
-C_EventUtils, RegisterEventCallback = nil, nil
-
 section("Moving the whole map")
 local function mapAnchor() local a = M.placed["Minimap"]; return a and a[2], a and a[3] end
 slash("move 0 0")

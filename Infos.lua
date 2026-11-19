@@ -1,7 +1,6 @@
 --[[---------------------------------------------------------------------------
 Infos.lua -- the texts on and around the map: zone, server time, local time,
-FPS and latency, coordinates. Also the zone's control icon and tooltip,
-and the name of whoever pinged the map.
+FPS and latency, coordinates. Also the zone's control icon and tooltip.
 
 Each one can be switched off, placed anywhere (a point on the map, or below
 the zone text for the server time, the text's own point, X/Y offset, so also
@@ -283,7 +282,6 @@ function Infos.Create()
     hover:SetScript("OnEnter", showZoneTooltip)
     hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
     texts.zoneHover = hover
-    Infos.CreatePing()
     -- The coordinates change while you walk: five times a second, and only
     -- while they show. On the map, not the text: a frame cannot hang from a
     -- font string.
@@ -448,8 +446,6 @@ function Infos.Apply()
         region:SetShown(Infos.Get(kind, "show"))
     end
     texts.zoneHover:SetShown(Infos.Get("zone", "show"))
-    -- The ping name in the zone text's font; it shows only after a ping.
-    styleFont(texts.ping, "zone")
 end
 
 -- The FPS and latency pair inside its holder: on top of each other (aligned
@@ -510,68 +506,4 @@ function Infos.Update()
     else
         texts.perf:Hide()
     end
-end
-
--- Who pinged ------------------------------------------------------------------
--- A click on the map shows a ping to the group; the name of whoever made it
--- shows for a few seconds above the player arrow, in class colour.
--- Fixed place, not at the ping: in Forever the event's coordinates can be
--- secret values, which allow no arithmetic.
-local PING_SECONDS = 3
-local PING_ABOVE_ARROW = 16
-local pingShown = 0
-
-function Infos.PingEnabled()
-    return ns.DB().pingName ~= false
-end
-
-function Infos.SetPingEnabled(v)
-    ns.DB().pingName = v and true or false
-    if not v and texts.ping then texts.ping:Hide() end
-end
-
--- Forever passes the unit as a secret value while restrictions apply.
--- UnitName takes it from addon code, UnitClass does not (only untainted):
--- the name then shows in white.
-local function issecret(v) return issecretvalue ~= nil and issecretvalue(v) end
-local WHITE = { 1, 1, 1 }
-
-local function classColour(unit)
-    if issecret(unit) then return WHITE[1], WHITE[2], WHITE[3] end
-    local _, class = UnitClass(unit)
-    if issecret(class) or not class then return WHITE[1], WHITE[2], WHITE[3] end
-    local c = (C_ClassColor and C_ClassColor.GetClassColor(class)) or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[class])
-    if c then return c.r, c.g, c.b end
-    return WHITE[1], WHITE[2], WHITE[3]
-end
-
-function Infos.ShowPing(unit)
-    if not Infos.PingEnabled() then return end
-    local fs = texts.ping
-    fs:SetText(UnitName(unit))
-    fs:SetTextColor(classColour(unit))
-    fs:Show()
-    pingShown = pingShown + 1
-    local mine = pingShown
-    C_Timer.After(PING_SECONDS, function()
-        -- A newer ping has its own timer.
-        if mine == pingShown then fs:Hide() end
-    end)
-end
-
-function Infos.CreatePing()
-    local fs = newText(Minimap, TEMPLATE.zone)
-    fs:SetPoint("BOTTOM", Minimap, "CENTER", 0, PING_ABOVE_ARROW)
-    fs:Hide()
-    texts.ping = fs
-    -- Forever: a callback event only, RegisterEvent rejects it as unknown
-    -- (seen in game 19.11.2026; Blizzard's own minimap uses the callback). The
-    -- global callback gets no owner first, then the payload.
-    if C_EventUtils and not C_EventUtils.IsEventValid("MINIMAP_PING") and RegisterEventCallback then
-        RegisterEventCallback("MINIMAP_PING", function(_, unit) Infos.ShowPing(unit) end)
-        return
-    end
-    local events = CreateFrame("Frame", nil, Minimap)
-    events:RegisterEvent("MINIMAP_PING")
-    events:SetScript("OnEvent", function(_, _, unit) Infos.ShowPing(unit) end)
 end

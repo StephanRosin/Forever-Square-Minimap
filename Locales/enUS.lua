@@ -87,8 +87,6 @@ L.POPUP_PROFILE_DELETE = "Really delete the profile \"%s\"?"
 -- Texts on the map (Infos.lua).
 L.OPT_INFO_ZONE = "Zone text"
 L.OPT_ZONE_PVP = "Faction icon after the name"
-L.OPT_PING = "Map pings"
-L.OPT_PING_NAME = "Show who pinged"
 L.OPT_INFO_SERVER = "Server time"
 L.OPT_INFO_LOCAL = "Local time"
 L.OPT_INFO_ANCHOR = "Anchored to"

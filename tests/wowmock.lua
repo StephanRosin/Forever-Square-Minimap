@@ -68,7 +68,6 @@ local function newWidget(name)
         function fs:GetFont() return self._font[1], self._font[2], self._font[3] end
         function fs:SetFont(path, size, flags) self._font = { path, size, flags } end
         function fs:SetJustifyH(v) self._justify = v end
-        function fs:SetTextColor(r, g, b) self._color = { r, g, b } end
         function fs:GetStringWidth()
             local visible = tostring(self._text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
             return #visible * 6

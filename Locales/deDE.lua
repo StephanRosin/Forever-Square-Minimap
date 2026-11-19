@@ -63,8 +63,6 @@ L.POPUP_PROFILE_DELETE = "Profil „%s“ wirklich löschen?"
 -- Texts on the map (Infos.lua).
 L.OPT_INFO_ZONE = "Zonentext"
 L.OPT_ZONE_PVP = "Fraktionssymbol hinter dem Namen"
-L.OPT_PING = "Pings auf der Karte"
-L.OPT_PING_NAME = "Zeigen, wer gepingt hat"
 L.OPT_INFO_SERVER = "Serverzeit"
 L.OPT_INFO_LOCAL = "Ortszeit"
 L.OPT_INFO_ANCHOR = "Verankert an"
