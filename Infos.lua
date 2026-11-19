@@ -28,9 +28,9 @@ local TEMPLATE = { zone = "GameFontNormal", server = "GameFontNormalSmall", ["lo
 -- The defaults: zone on top, local time bottom centre, FPS and latency in
 -- the top right corner, coordinates in the bottom left one.
 Infos.DEFAULTS = {
-    -- pvpIcon off: an update must not change the text existing users see.
+    -- pvpIcon on by default (Stephan's choice, 19.11.2026).
     zone = { show = true, anchor = "MAP", mapPoint = "TOP", point = "TOP", x = 0, y = 0,
-        font = "Friz Quadrata", size = 11, pvpIcon = false },
+        font = "Friz Quadrata", size = 11, pvpIcon = true },
     -- Right under the zone text; moves with it when the zone text grows.
     server = { show = true, anchor = "ZONE", mapPoint = "BOTTOM", point = "TOP", x = 0, y = -1,
         font = "DEFAULT", size = 11 },
@@ -186,24 +186,30 @@ for _, id in ipairs({ 1416, 1417, 1418, 1419, 1422, 1423, 1424, 1425, 1427, 1428
     Infos.ZONE_CONTROL[id] = CONTESTED
 end
 
--- Blizzard's small group crests and the battleground's crossed swords (the
--- left upper quarter of its texture), inline at the text's height.
+-- Blizzard's small group crests and the battleground's crossed swords,
+-- cut to what they draw (pixels measured in the files: file size, left,
+-- right, top, bottom).
 local ZONE_ICONS = {
-    [ALLIANCE] = "|TInterface\\GroupFrame\\UI-Group-PVP-Alliance:0|t",
-    [HORDE] = "|TInterface\\GroupFrame\\UI-Group-PVP-Horde:0|t",
-    [CONTESTED] = "|TInterface\\WorldStateFrame\\CombatSwords:0:0:0:0:64:64:0:32:0:32|t",
+    [ALLIANCE] = { "Interface\\GroupFrame\\UI-Group-PVP-Alliance", 32, 5, 24, 1, 29 },
+    [HORDE] = { "Interface\\GroupFrame\\UI-Group-PVP-Horde", 32, 1, 27, 1, 27 },
+    [CONTESTED] = { "Interface\\WorldStateFrame\\CombatSwords", 64, 0, 32, 4, 30 },
 }
+-- At the text's height the crests were too small to read (seen in game).
+local ZONE_ICON_SCALE = 1.6
 
 local function currentMap()
     return C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
 end
 
--- The zone text with the control icon behind it; plain where the map is not
--- in the table.
-function ns.ZoneWithIcon(zone, mapID)
+-- The zone text with the control icon behind it, ZONE_ICON_SCALE times the
+-- font size high; plain where the map is not in the table.
+function ns.ZoneWithIcon(zone, mapID, fontSize)
     local icon = ZONE_ICONS[Infos.ZONE_CONTROL[mapID]]
     if not icon then return zone end
-    return zone .. " " .. icon
+    local path, file, left, right, top, bottom = unpack(icon)
+    local h = math.floor((fontSize or 12) * ZONE_ICON_SCALE + 0.5)
+    local w = math.floor(h * (right - left) / (bottom - top) + 0.5)
+    return ("%s |T%s:%d:%d:0:0:%d:%d:%d:%d:%d:%d|t"):format(zone, path, h, w, file, file, left, right, top, bottom)
 end
 
 -- The tooltip as lines { text, r, g, b }: the zone in white, then the subzone
@@ -477,7 +483,10 @@ end
 function Infos.Update()
     if not texts.zone then return end
     local zone = (GetMinimapZoneText and GetMinimapZoneText()) or (GetZoneText and GetZoneText()) or ""
-    if Infos.Get("zone", "pvpIcon") then zone = ns.ZoneWithIcon(zone, currentMap()) end
+    if Infos.Get("zone", "pvpIcon") then
+        local _, size = texts.zone:GetFont()
+        zone = ns.ZoneWithIcon(zone, currentMap(), size)
+    end
     texts.zone:SetText(zone)
 
     -- GetGameTime is the server time, the one Blizzard's clock showed.

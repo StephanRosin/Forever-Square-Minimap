@@ -31,7 +31,7 @@ A theme frames the map with its backdrop, border and corner pieces and gives the
 - Hidden: the round border, the north tag, the zoom buttons (the **mouse wheel zooms** instead), the world map button, the close button and Blizzard's clock and zone bar.
 
 ## Texts on and around the map
-- **Zone name** at the top, with the **server time** below it.
+- **Zone name** at the top, with the **server time** below it. An **Alliance, Horde or crossed-swords icon** behind the name shows who holds the zone; hover the name for the subzone and its status.
 - **Local time** of your computer at the bottom.
 - Both clocks in **24-hour** (21:07) or **12-hour** format (9:07 PM).
 - **Coordinates** of your character in the bottom left corner.
