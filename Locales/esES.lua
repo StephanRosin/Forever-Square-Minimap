@@ -63,6 +63,9 @@ L.POPUP_PROFILE_DELETE = "¿Eliminar de verdad el perfil «%s»?"
 
 -- Texts on the map (Infos.lua).
 L.OPT_INFO_ZONE = "Texto de zona"
+L.OPT_ZONE_PVP = "Color según estado JcJ"
+L.OPT_PING = "Señales en el mapa"
+L.OPT_PING_NAME = "Mostrar quién señaló"
 L.OPT_INFO_SERVER = "Hora del servidor"
 L.OPT_INFO_LOCAL = "Hora local"
 L.OPT_INFO_ANCHOR = "Anclado a"

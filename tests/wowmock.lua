@@ -68,6 +68,7 @@ local function newWidget(name)
         function fs:GetFont() return self._font[1], self._font[2], self._font[3] end
         function fs:SetFont(path, size, flags) self._font = { path, size, flags } end
         function fs:SetJustifyH(v) self._justify = v end
+        function fs:SetTextColor(r, g, b) self._color = { r, g, b } end
         function fs:GetStringWidth()
             local visible = tostring(self._text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
             return #visible * 6
@@ -152,6 +153,7 @@ C_Timer = { After = function(_, fn) table.insert(M.timers, fn) end }
 M.state = { ctrl = false, mouseDown = false, cursor = {0, 0}, zoom = 3 }
 function GetMinimapZoneText() return "Gadgetzan" end
 function GetZoneText()        return "Tanaris" end
+function GetSubZoneText()     return "Gadgetzan" end
 M.serverTime = { 21, 7 }
 M.localTime = { hour = 21, min = 7 }
 function GetGameTime()        return M.serverTime[1], M.serverTime[2] end

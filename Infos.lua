@@ -1,6 +1,7 @@
 --[[---------------------------------------------------------------------------
 Infos.lua -- the texts on and around the map: zone, server time, local time,
-FPS and latency, coordinates.
+FPS and latency, coordinates. Also the zone text's PvP colour and tooltip,
+and the name of whoever pinged the map.
 
 Each one can be switched off, placed anywhere (a point on the map, or below
 the zone text for the server time, the text's own point, X/Y offset, so also
@@ -28,8 +29,9 @@ local TEMPLATE = { zone = "GameFontNormal", server = "GameFontNormalSmall", ["lo
 -- The defaults: zone on top, local time bottom centre, FPS and latency in
 -- the top right corner, coordinates in the bottom left one.
 Infos.DEFAULTS = {
+    -- pvpColour off: an update must not recolour the text existing users see.
     zone = { show = true, anchor = "MAP", mapPoint = "TOP", point = "TOP", x = 0, y = 0,
-        font = "Friz Quadrata", size = 11 },
+        font = "Friz Quadrata", size = 11, pvpColour = false },
     -- Right under the zone text; moves with it when the zone text grows.
     server = { show = true, anchor = "ZONE", mapPoint = "BOTTOM", point = "TOP", x = 0, y = -1,
         font = "DEFAULT", size = 11 },
@@ -158,6 +160,71 @@ function ns.PerfText(fps, ping)
     return a .. "\n" .. b
 end
 
+-- Zone PvP status ---------------------------------------------------------------
+-- Blizzard's colours and tooltip lines (Blizzard_Minimap, Minimap_Update and
+-- Minimap_SetTooltip). label: Blizzard's localised string; faction: the line
+-- needs the controlling faction's name, and is left out without one.
+local PVP = {
+    sanctuary = { 0.41, 0.8, 0.94, label = "SANCTUARY_TERRITORY" },
+    arena     = { 1.0, 0.1, 0.1, label = "FREE_FOR_ALL_TERRITORY" },
+    friendly  = { 0.1, 1.0, 0.1, label = "FACTION_CONTROLLED_TERRITORY", faction = true },
+    hostile   = { 1.0, 0.1, 0.1, label = "FACTION_CONTROLLED_TERRITORY", faction = true },
+    contested = { 1.0, 0.7, 0.0, label = "CONTESTED_TERRITORY" },
+    combat    = { 1.0, 0.1, 0.1, label = "COMBAT_ZONE" },
+}
+-- GameFontNormal's gold, the zone text's colour without PvP colouring.
+local NORMAL = { 1.0, 0.82, 0.0 }
+
+-- The zone's PvP type, faction name; Forever has C_PvP, older clients the global.
+local function zonePvP()
+    if C_PvP and C_PvP.GetZonePVPInfo then
+        local pvpType, _, faction = C_PvP.GetZonePVPInfo()
+        return pvpType, faction
+    end
+    if GetZonePVPInfo then
+        local pvpType, _, faction = GetZonePVPInfo()
+        return pvpType, faction
+    end
+end
+
+-- The zone text's colour for a PvP type: Blizzard's, gold for none
+-- (a city of no faction, an instance) or an unknown type.
+function ns.ZonePvPColour(pvpType)
+    local c = PVP[pvpType] or NORMAL
+    return c[1], c[2], c[3]
+end
+
+-- The tooltip as lines { text, r, g, b }: the zone in white, then the subzone
+-- and the PvP status in the type's colour. Pure; labels are Blizzard's
+-- format strings, passed in so the test needs no globals.
+function ns.ZoneTooltipLines(pvpType, faction, zone, subzone, labels)
+    if subzone == zone then subzone = "" end
+    local lines = { { zone or "", 1, 1, 1 } }
+    local c = PVP[pvpType]
+    if not c then
+        lines[#lines + 1] = { subzone or "", NORMAL[1], NORMAL[2], NORMAL[3] }
+        return lines
+    end
+    if c.faction and (not faction or faction == "") then return lines end
+    local label = labels[c.label] or ""
+    if c.faction then label = label:format(faction) end
+    lines[#lines + 1] = { subzone or "", c[1], c[2], c[3] }
+    lines[#lines + 1] = { label, c[1], c[2], c[3] }
+    return lines
+end
+
+local function showZoneTooltip(owner)
+    local pvpType, faction = zonePvP()
+    local labels = {}
+    for _, c in pairs(PVP) do labels[c.label] = _G[c.label] end
+    GameTooltip:SetOwner(owner, "ANCHOR_LEFT")
+    for _, line in ipairs(ns.ZoneTooltipLines(pvpType, faction, GetZoneText and GetZoneText(),
+            GetSubZoneText and GetSubZoneText(), labels)) do
+        GameTooltip:AddLine(line[1], line[2], line[3], line[4])
+    end
+    GameTooltip:Show()
+end
+
 -- The texts ------------------------------------------------------------------
 -- Created once, inside the map's frame (so they hide with it), then styled
 -- and placed by Apply and filled by Update.
@@ -183,6 +250,20 @@ function Infos.Create()
     holder.fps = newText(holder, TEMPLATE.perf)
     holder.ms = newText(holder, TEMPLATE.perf)
     texts.perf = holder
+    -- Hover area over the zone text for its tooltip. Motion only: a click
+    -- there still pings the map, the wheel still zooms.
+    local hover = CreateFrame("Frame", nil, Minimap)
+    hover:SetAllPoints(texts.zone)
+    if hover.SetMouseClickEnabled then
+        hover:SetMouseMotionEnabled(true)
+        hover:SetMouseClickEnabled(false)
+    else
+        hover:EnableMouse(true)
+    end
+    hover:SetScript("OnEnter", showZoneTooltip)
+    hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    texts.zoneHover = hover
+    Infos.CreatePing()
     -- The coordinates change while you walk: five times a second, and only
     -- while they show. On the map, not the text: a frame cannot hang from a
     -- font string.
@@ -346,6 +427,9 @@ function Infos.Apply()
             Infos.Get(kind, "y"))
         region:SetShown(Infos.Get(kind, "show"))
     end
+    texts.zoneHover:SetShown(Infos.Get("zone", "show"))
+    -- The ping name in the zone text's font; it shows only after a ping.
+    styleFont(texts.ping, "zone")
 end
 
 -- The FPS and latency pair inside its holder: on top of each other (aligned
@@ -378,6 +462,11 @@ function Infos.Update()
     if not texts.zone then return end
     local zone = (GetMinimapZoneText and GetMinimapZoneText()) or (GetZoneText and GetZoneText()) or ""
     texts.zone:SetText(zone)
+    if Infos.Get("zone", "pvpColour") then
+        texts.zone:SetTextColor(ns.ZonePvPColour((zonePvP())))
+    else
+        texts.zone:SetTextColor(NORMAL[1], NORMAL[2], NORMAL[3])
+    end
 
     -- GetGameTime is the server time, the one Blizzard's clock showed.
     local hour, minute
@@ -405,4 +494,64 @@ function Infos.Update()
     else
         texts.perf:Hide()
     end
+end
+
+-- Who pinged ------------------------------------------------------------------
+-- A click on the map shows a ping to the group; the name of whoever made it
+-- shows for a few seconds above the player arrow, in class colour.
+-- Fixed place, not at the ping: in Forever the event's coordinates can be
+-- secret values, which allow no arithmetic.
+local PING_SECONDS = 3
+local PING_ABOVE_ARROW = 16
+local pingShown = 0
+
+function Infos.PingEnabled()
+    return ns.DB().pingName ~= false
+end
+
+function Infos.SetPingEnabled(v)
+    ns.DB().pingName = v and true or false
+    if not v and texts.ping then texts.ping:Hide() end
+end
+
+-- Forever passes the unit as a secret value while restrictions apply.
+-- UnitName takes it from addon code, UnitClass does not (only untainted):
+-- the name then shows in white.
+local function issecret(v) return issecretvalue ~= nil and issecretvalue(v) end
+local WHITE = { 1, 1, 1 }
+
+local function classColour(unit)
+    if issecret(unit) then return WHITE[1], WHITE[2], WHITE[3] end
+    local _, class = UnitClass(unit)
+    if issecret(class) or not class then return WHITE[1], WHITE[2], WHITE[3] end
+    local c = (C_ClassColor and C_ClassColor.GetClassColor(class)) or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[class])
+    if c then return c.r, c.g, c.b end
+    return WHITE[1], WHITE[2], WHITE[3]
+end
+
+function Infos.ShowPing(unit)
+    if not Infos.PingEnabled() then return end
+    local fs = texts.ping
+    fs:SetText(UnitName(unit))
+    fs:SetTextColor(classColour(unit))
+    fs:Show()
+    pingShown = pingShown + 1
+    local mine = pingShown
+    C_Timer.After(PING_SECONDS, function()
+        -- A newer ping has its own timer.
+        if mine == pingShown then fs:Hide() end
+    end)
+end
+
+function Infos.CreatePing()
+    local fs = newText(Minimap, TEMPLATE.zone)
+    fs:SetPoint("BOTTOM", Minimap, "CENTER", 0, PING_ABOVE_ARROW)
+    fs:Hide()
+    texts.ping = fs
+    local events = CreateFrame("Frame", nil, Minimap)
+    -- An unknown event name throws and would stop the rest of the file.
+    if not C_EventUtils or C_EventUtils.IsEventValid("MINIMAP_PING") then
+        events:RegisterEvent("MINIMAP_PING")
+    end
+    events:SetScript("OnEvent", function(_, _, unit) Infos.ShowPing(unit) end)
 end

@@ -185,6 +185,9 @@ local function infoSection(kind)
         { type = "header", label = HEADERS[kind] },
         { type = "check", label = "OPT_PERF_SHOW", get = get("show"), set = set("show") },
     }
+    if kind == "zone" then
+        items[#items + 1] = { type = "check", label = "OPT_ZONE_PVP", get = get("pvpColour"), set = set("pvpColour") }
+    end
     if kind == "server" then
         items[#items + 1] = { type = "select", label = "OPT_INFO_ANCHOR",
             choices = function()
@@ -329,6 +332,11 @@ local function textsTab()
           get = function() return Infos.ClockFormat() end, set = function(v) Infos.SetClockFormat(v) end },
     }
     for _, kind in ipairs({ "zone", "server", "local" }) do add(items, infoSection(kind)) end
+    add(items, {
+        { type = "header", label = "OPT_PING" },
+        { type = "check", label = "OPT_PING_NAME",
+          get = function() return Infos.PingEnabled() end, set = function(v) Infos.SetPingEnabled(v) end },
+    })
     return items
 end
 

@@ -382,6 +382,65 @@ C_Map = nil
 ns.DB().infos = nil
 I.Apply()
 
+section("Zone text: PvP colour and tooltip")
+local function rgb(r, g, b) return ("%.2f %.2f %.2f"):format(r, g, b) end
+check("contested orange", rgb(ns.ZonePvPColour("contested")), "1.00 0.70 0.00")
+check("sanctuary blue", rgb(ns.ZonePvPColour("sanctuary")), "0.41 0.80 0.94")
+check("no type: gold", rgb(ns.ZonePvPColour(nil)), "1.00 0.82 0.00")
+check("unknown type: gold", rgb(ns.ZonePvPColour("future")), "1.00 0.82 0.00")
+local labels = { FACTION_CONTROLLED_TERRITORY = "(%s Territory)", CONTESTED_TERRITORY = "(Contested Territory)" }
+local lines = ns.ZoneTooltipLines("friendly", "Horde", "Durotar", "Razor Hill", labels)
+check("zone first, white", lines[1][1] .. rgb(lines[1][2], lines[1][3], lines[1][4]), "Durotar1.00 1.00 1.00")
+check("subzone in green", lines[2][1] .. rgb(lines[2][2], lines[2][3], lines[2][4]), "Razor Hill0.10 1.00 0.10")
+check("faction filled in", lines[3][1], "(Horde Territory)")
+check("friendly without faction: zone only", #ns.ZoneTooltipLines("friendly", "", "Durotar", "Razor Hill", labels), 1)
+check("subzone = zone left empty", ns.ZoneTooltipLines("contested", nil, "Tanaris", "Tanaris", labels)[2][1], "")
+check("no type: subzone in gold", #ns.ZoneTooltipLines(nil, nil, "Tanaris", "Gadgetzan", labels), 2)
+check("off by default: gold", rgb(unpack(I.texts.zone._color)), "1.00 0.82 0.00")
+C_PvP = { GetZonePVPInfo = function() return "hostile", false, "Alliance" end }
+I.Set("zone", "pvpColour", true)
+check("on: hostile red", rgb(unpack(I.texts.zone._color)), "1.00 0.10 0.10")
+I.Set("zone", "pvpColour", false)
+check("off again: gold", rgb(unpack(I.texts.zone._color)), "1.00 0.82 0.00")
+C_PvP = nil
+I.Set("zone", "show", false)
+check("no tooltip area without the text", I.texts.zoneHover:IsShown(), false)
+ns.DB().infos = nil
+I.Apply()
+check("tooltip area with the text", I.texts.zoneHover:IsShown(), true)
+
+section("Who pinged")
+local roster = { party1 = { "Brannor", "WARRIOR" } }
+function UnitName(u) return roster[u][1] end
+function UnitClass(u) return "Warrior", roster[u][2] end
+RAID_CLASS_COLORS = { WARRIOR = { r = 0.78, g = 0.61, b = 0.43 } }
+check("hidden before a ping", I.texts.ping:IsShown(), false)
+check("on by default", I.PingEnabled(), true)
+local before = #M.timers
+M.Fire("MINIMAP_PING", "party1", 0.1, -0.2)
+check("name shown", I.texts.ping._text, "Brannor")
+check("in class colour", rgb(unpack(I.texts.ping._color)), "0.78 0.61 0.43")
+check("shown", I.texts.ping:IsShown(), true)
+M.Fire("MINIMAP_PING", "party1", 0, 0)
+M.timers[before + 1]()
+check("an older timer leaves a newer ping", I.texts.ping:IsShown(), true)
+M.timers[before + 2]()
+check("hidden after its time", I.texts.ping:IsShown(), false)
+-- Forever: a secret unit may not reach UnitClass from addon code.
+local secretUnit = {}
+issecretvalue = function(v) return v == secretUnit end
+roster[secretUnit] = { "Hidden" }
+function UnitClass() error("UnitClass called with a secret") end
+M.Fire("MINIMAP_PING", secretUnit, 0, 0)
+check("secret unit: name shown", I.texts.ping._text, "Hidden")
+check("secret unit: white", rgb(unpack(I.texts.ping._color)), "1.00 1.00 1.00")
+issecretvalue = nil
+I.SetPingEnabled(false)
+check("switched off: hidden", I.texts.ping:IsShown(), false)
+M.Fire("MINIMAP_PING", "party1", 0, 0)
+check("switched off: stays hidden", I.texts.ping:IsShown(), false)
+ns.DB().pingName = nil
+
 section("Moving the whole map")
 local function mapAnchor() local a = M.placed["Minimap"]; return a and a[2], a and a[3] end
 slash("move 0 0")
