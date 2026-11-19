@@ -473,8 +473,7 @@ check("azeroth: walnut frame on four sides, repeating", framed, 4)
 local outer, top = ns.api.Reach(), frames[1]._anchor
 check("azeroth: frame outside the ring, 7 wide", top[1] .. " " .. top[3] .. " " .. top[4] .. " " .. top[5],
     "BOTTOMRIGHT TOPRIGHT " .. outer .. " " .. (outer - 7))
-check("azeroth: gold corners on the frame's outer corner",
-    ornaments[1]:IsShown() and ornaments[1]._texture == PATH .. "Bracket" and ornaments[1]._anchor[4], -outer)
+check("azeroth: no corner pieces", ornaments[1]:IsShown(), false)
 Themes.Switch("GOBLIN")
 check("goblin: fonts", Infos.Get("zone", "font") .. "/" .. Infos.Get("server", "font"), "Bungee/Rubik Medium")
 check("goblin: zone a point smaller, clocks as they were", Infos.Get("zone", "size") .. "/" .. Infos.Get("server", "size"),
