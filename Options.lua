@@ -41,11 +41,14 @@ local function themeSection()
         { type = "select", label = "OPT_THEME", hint = "HINT_THEME",
           choices = function()
               local list = {}
-              for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do list[#list + 1] = { value = id, label = L["THEME_" .. id] } end
+              -- HD themes are colours of their base (colour menu below).
+              for _, id in ipairs(LibForeverThemes.MenuIds(LibForeverThemes.SpecIds(Themes.SPECS))) do
+                  list[#list + 1] = { value = id, label = L["THEME_" .. id] }
+              end
               return list
           end,
           disabled = followsHub,
-          get = function() return Themes.Current() end,
+          get = function() return LibForeverThemes.BaseTheme(Themes.Current()) end,
           set = function(id)
               local ok, why = Themes.Switch(id)
               themeRefused(why)
@@ -56,15 +59,23 @@ local function themeSection()
         { type = "select", label = "OPT_THEME_COLOR",
           visible = function() return #Themes.Colors() > 0 end,
           choices = function()
-              local theme, list = Themes.Current(), {}
-              for _, id in ipairs(Themes.Colors()) do
-                  list[#list + 1] = { value = id, label = L["THEME_COLOR_" .. theme .. "_" .. id] }
+              local Lib, list = LibForeverThemes, {}
+              for _, e in ipairs(Lib.MenuColors(Themes.SPECS, Themes.Current())) do
+                  local label = L["THEME_COLOR_" .. e.theme .. "_" .. e.color]
+                  list[#list + 1] = { value = Lib.MenuValue(e.theme, e.color), label = e.hd and "HD " .. label or label }
               end
               return list
           end,
           disabled = followsHub,
-          get = function() return Themes.Color() end,
-          set = function(id) themeRefused(select(2, Themes.SetColor(id))) end },
+          get = function() return LibForeverThemes.MenuValue(Themes.Current(), Themes.Color()) end,
+          -- An HD colour switches to the HD theme (same settings), a plain one back.
+          set = function(value)
+              local theme, color = LibForeverThemes.ParseMenuValue(value)
+              local ok, why = Themes.Switch(theme)
+              if ok then ok, why = Themes.SetColor(color, theme) end
+              themeRefused(why)
+              if ok then ns.RefreshOptions() end
+          end },
         { type = "buttons", text = hubText("HUB_FOLLOWS"), visible = followsHub, buttons = {
             { label = hubText("HUB_OPEN"), width = 200, onClick = function() LibForeverThemes.Hub().OpenOptions() end },
         } },

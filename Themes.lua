@@ -158,6 +158,19 @@ end
 
 -- The stored Classic settings while a theme is in use (the defaults if none
 -- was stored); nil on Classic.
+-- Whether set differs from what choosing theme id afresh would make (a
+-- customised set); the theme field does not count.
+local function same(a, b)
+    if type(a) ~= "table" or type(b) ~= "table" then return a == b end
+    for k, v in pairs(a) do
+        if k ~= "theme" and not same(v, b[k]) then return false end
+    end
+    for k in pairs(b) do
+        if k ~= "theme" and a[k] == nil then return false end
+    end
+    return true
+end
+
 function Themes.ClassicSet()
     if Themes.Current() == Themes.CLASSIC then return nil end
     return storedSets()[Themes.CLASSIC] or {}
@@ -271,9 +284,15 @@ function Themes.Switch(id)
     if why then return nil, why end
     local current = Themes.Current()
     if id == current then return true end
+    -- A base and its HD theme share their settings: only the look changes.
+    if Lib.SetKey(id) == Lib.SetKey(current) then
+        ns.DB().theme = id
+        if ns.api and ns.api.ApplyLook then ns.api.ApplyLook() end
+        return true
+    end
     local sets = storedSets()
-    sets[current] = snapshot()
-    local nextSet = sets[id]
+    sets[Lib.SetKey(current)] = snapshot()
+    local nextSet = sets[Lib.SetKey(id)]
     if not nextSet then
         -- CLASSIC is never made from a theme: without a stored one (a
         -- profile copied while on a theme) the settings stay as they are.
@@ -282,7 +301,7 @@ function Themes.Switch(id)
     end
     nextSet.theme = id ~= Themes.CLASSIC and id or nil
     -- The live set is the profile: no stale copy stays behind.
-    sets[id] = nil
+    sets[Lib.SetKey(id)] = nil
     use(nextSet)
     return true
 end
@@ -304,8 +323,8 @@ function Themes.Stored()
     -- Only looking: a profile that never had a theme gets no sets.
     if type(ns.DB().themeSets) ~= "table" then return {} end
     local sets, list = storedSets(), {}
-    for _, id in ipairs(Lib.SpecIds(Themes.SPECS)) do
-        if sets[id] and id ~= Themes.Current() then list[#list + 1] = id end
+    for _, id in ipairs(Lib.MenuIds(Lib.SpecIds(Themes.SPECS))) do
+        if sets[id] and id ~= Lib.SetKey(Themes.Current()) then list[#list + 1] = id end
     end
     return list
 end
@@ -382,7 +401,19 @@ end
 function Themes.Upgrade()
     local db = ns.DB()
     local sets = db.themeSets
-    if type(sets) ~= "table" or not Lib.NeedsReseed(sets, OWN_REVISION) then return end
+    if type(sets) ~= "table" then return end
+    -- Before 1.15.0 a base and its HD theme had a set each: made one.
+    local merged = Lib.MergeHD(sets, Themes.Current(), snapshot(), function(hdId, set)
+        local classic = sets[Themes.CLASSIC] or (Themes.Current() == Themes.CLASSIC and snapshot())
+        return not (classic and same(set, seed(hdId, classic)))
+    end)
+    if merged then
+        for key in pairs(db) do
+            if key ~= "themeSets" then db[key] = nil end
+        end
+        for key, value in pairs(merged) do db[key] = value end
+    end
+    if not Lib.NeedsReseed(sets, OWN_REVISION) then return end
     local current = Themes.Current()
     local base = sets[Themes.CLASSIC]
     storedSets()

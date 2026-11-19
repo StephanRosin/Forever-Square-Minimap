@@ -241,6 +241,54 @@ check("wood hd: 256 unit tiles", backs[1]._coords[2], (Minimap:GetWidth() + 2 * 
 entry.SetColor("EBONY")
 Themes.Switch("WOOD")
 check("wood: 128 unit tiles", backs[1]._coords[2], (Minimap:GetWidth() + 2 * p) / 128)
+-- HD is a colour of its base: one set of settings for both.
+check("wood hd: in the theme menu as wood", table.concat(LibForeverThemes.MenuIds(LibForeverThemes.SpecIds(Themes.SPECS)), " "):find("_HD") == nil, true)
+db = ns.DB()
+db.size = 222
+Themes.Switch("WOOD_HD")
+check("wood -> wood hd: settings kept", ns.DB().size, 222)
+check("wood -> wood hd: theme", Themes.Current(), "WOOD_HD")
+check("wood hd: no own set stored", ns.DB().themeSets.WOOD_HD, nil)
+Themes.Switch("PIXEL")
+check("wood hd: stored under wood", ns.DB().themeSets.WOOD.size, 222)
+check("copy from: wood listed, no HD", table.concat(Themes.Stored(), " "):find("_HD") == nil, true)
+Themes.Switch("WOOD")
+check("pixel -> wood: the shared set", ns.DB().size, 222)
+-- Sets kept apart before 1.15.0, merged once: a customised HD set wins.
+local function clone(t)
+    if type(t) ~= "table" then return t end
+    local c = {}
+    for k, v in pairs(t) do c[k] = clone(v) end
+    return c
+end
+Themes.Reset()
+Themes.Switch("PIXEL")
+local sets = ns.DB().themeSets
+sets.WOOD_HD = clone(sets.WOOD)
+sets.WOOD_HD.theme = "WOOD_HD"
+sets.WOOD.size = 210
+sets.hdMerged = nil
+Themes.Upgrade()
+check("merge: plain HD set, wood's stays", sets.WOOD.size, 210)
+check("merge: HD set gone", sets.WOOD_HD, nil)
+sets.WOOD_HD = clone(sets.WOOD)
+sets.WOOD_HD.size = 333
+sets.hdMerged = nil
+Themes.Upgrade()
+check("merge: customised HD set wins", sets.WOOD.size, 333)
+check("merge: under wood's name", sets.WOOD.theme, "WOOD")
+-- On the HD theme itself: its live settings win when customised.
+Themes.Switch("WOOD")
+sets = ns.DB().themeSets
+ns.DB().theme = "WOOD_HD"
+ns.DB().size = 244
+sets.WOOD = clone(ns.DB())
+sets.WOOD.size = 199
+sets.WOOD.theme = "WOOD"
+sets.hdMerged = nil
+Themes.Upgrade()
+check("merge: on customised HD, it stays live", ns.DB().size .. " " .. Themes.Current(), "244 WOOD_HD")
+check("merge: no stale wood set", sets.WOOD, nil)
 Themes.Switch("PIXEL")
 check("colour: another theme's id refused", select(2, Themes.SetColor("OAK")), "UNKNOWN")
 combat = true
