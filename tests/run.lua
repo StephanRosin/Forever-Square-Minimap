@@ -230,7 +230,7 @@ I.Apply()
 
 section("Minimap button")
 local B = ns.MinimapButton
-local button = M.byName["ForeverSquareMinimapButton"]
+local button = M.byName["Forever Square Minimap"]
 local function buttonAt() local a = button._anchor; return a[4], a[5] end
 check("created", button ~= nil, true)
 check("on the map", button._anchor[2], Minimap)

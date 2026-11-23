@@ -257,7 +257,7 @@ check("pages again", listed().infopanel, 1)
 check("nothing twice after on/off", twice(), "")
 
 local questieIcon = lib.objects.Questie
-local own = M.byName["ForeverSquareMinimapButton"]
+local own = M.byName["Forever Square Minimap"]
 check("icons stay by default", questieIcon._parent, nil)
 check("own button stays by default", own:IsShown(), true)
 B.Set("compartment", "hideIcons", true)
