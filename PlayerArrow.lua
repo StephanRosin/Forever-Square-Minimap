@@ -35,7 +35,30 @@ local function update(frame)
     if facing then frame.icon:SetRotation(facing) end
 end
 
+-- Every icon the client draws on the map: quests, points of interest, tracking
+-- and its arrow. Blizzard's slider for it sits in Edit Mode on the cluster this
+-- addon hides. Account wide, outside profiles and theme sets; nil = never set
+-- here, Blizzard's value stays.
+function PlayerArrow.Icons()
+    local v = ns.AccountDB().iconScale
+    return type(v) == "number" and v or nil
+end
+
+-- Edit Mode sets its own value again whenever a layout is applied, and the map
+-- has no getter to notice it: the one-second tick repeats ours.
+function PlayerArrow.ApplyIcons()
+    local v = PlayerArrow.Icons()
+    if v and Minimap.SetIconScale then Minimap:SetIconScale(v / 100) end
+end
+
+function PlayerArrow.SetIcons(v)
+    ns.AccountDB().iconScale = v
+    PlayerArrow.ApplyIcons()
+    PlayerArrow.Apply()
+end
+
 function PlayerArrow.Apply()
+    PlayerArrow.ApplyIcons()
     local scale = PlayerArrow.Get()
     local frame = PlayerArrow.frame
     if scale <= 100 then
@@ -52,7 +75,8 @@ function PlayerArrow.Apply()
         frame:SetScript("OnUpdate", update)
         PlayerArrow.frame = frame
     end
-    local size = PlayerArrow.BASE * scale / 100
+    -- Blizzard's arrow grows with the icons; ours has to keep covering it.
+    local size = PlayerArrow.BASE * scale / 100 * (PlayerArrow.Icons() or 100) / 100
     frame:SetSize(size, size)
     frame:Show()
     update(frame)

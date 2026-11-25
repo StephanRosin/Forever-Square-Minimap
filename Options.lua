@@ -304,6 +304,8 @@ local function mapTab()
           set = function(v) DB().offsetY = v; ns.api.AnchorTopRight() end },
         { label = "OPT_PLAYER_ARROW", min = 100, max = 300, step = 10, unit = "%",
           get = function() return ns.PlayerArrow.Get() end, set = function(v) ns.PlayerArrow.Set(v) end },
+        { label = "OPT_ICON_SCALE", min = 50, max = 200, step = 10, unit = "%",
+          get = function() return ns.PlayerArrow.Icons() or 100 end, set = function(v) ns.PlayerArrow.SetIcons(v) end },
 
         { type = "header", label = "OPT_BORDER" },
         {

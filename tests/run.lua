@@ -344,6 +344,15 @@ do
     rotate, facing = false, nil
     A.frame:GetScript("OnUpdate")(A.frame)
     check("no facing (instance): hidden, Blizzard's shows", icon:IsShown(), false)
+    check("icon size never set: Blizzard's value is left alone", M.iconScaleCalls, nil)
+    A.SetIcons(150)
+    check("icon size goes to the map", M.iconScale, 1.5)
+    check("stored account wide, not in the profile", ns.AccountDB().iconScale == 150 and ns.DB().iconScale == nil, true)
+    check("our arrow grows with the icons", A.frame:GetWidth(), 3 * A.BASE)
+    M.iconScale = 1   -- Edit Mode applies its layout
+    A.ApplyIcons()
+    check("the tick puts ours back", M.iconScale, 1.5)
+    ns.AccountDB().iconScale = nil
     A.Set(100)
     check("back to 100 %: gone", A.frame:IsShown(), false)
     check("saved in the profile", ns.DB().playerArrow, 100)

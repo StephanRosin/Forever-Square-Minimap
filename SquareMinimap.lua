@@ -593,6 +593,7 @@ events:SetScript("OnEvent", function()
         self.since = 0
         UpdateLabels()
         ns.Buttons.Check()
+        ns.PlayerArrow.ApplyIcons()
 
         local sig = VisibleSignature()
         if sig ~= self.lastSignature then
@@ -689,6 +690,14 @@ local function DumpText()
             tostring(pt), (rel and rel.GetName and rel:GetName()) or "-",
             tostring(relPt), floor((x or 0) + 0.5), floor((y or 0) + 0.5)))
     end
+    -- For "the map picture is gone" reports: the engine stops drawing the ground
+    -- while Blizzard's hybrid minimap is shown, and has no picture for some interiors.
+    add(("  zoom %s  alpha %.2f  rotate %s  indoors %s  hybrid %s  map %s"):format(
+        tostring(Minimap:GetZoom()), Minimap.GetAlpha and Minimap:GetAlpha() or 1,
+        tostring(GetCVarBool and GetCVarBool("rotateMinimap")),
+        tostring(IsIndoors and IsIndoors()),
+        tostring(HybridMinimap and HybridMinimap:IsShown() or false),
+        tostring(C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player"))))
     add("")
     add(("%-26s %-9s %-14s %-16s %-12s %-16s %s"):format(
         "Frame", "Size", "Point", "to", "Offset", "State", "Parent"))

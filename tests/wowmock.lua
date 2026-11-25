@@ -176,6 +176,7 @@ function Minimap:GetCenter() return M.minimapRight - self._w / 2, M.minimapTop -
 function Minimap:GetZoom()  return M.state.zoom end
 function Minimap:SetZoom(z) M.state.zoom = z; M.zoomCalls = (M.zoomCalls or 0) + 1 end
 function Minimap:GetZoomLevels() return 6 end
+function Minimap:SetIconScale(s) M.iconScale = s; M.iconScaleCalls = (M.iconScaleCalls or 0) + 1 end
 -- The modern client's zoom buttons: no global name, only keys on the map.
 Minimap.ZoomIn, Minimap.ZoomOut = newWidget(), newWidget()
 
