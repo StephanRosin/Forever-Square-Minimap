@@ -91,15 +91,9 @@ local function DrawnSize()
     return max(1, (ns.DB().size or CONFIG.defaultSize) - 2 * ThemeInset())
 end
 
-local function ApplySize(size)
-    size = max(CONFIG.minSize, min(CONFIG.maxSize, floor(size + 0.5)))
-    ns.DB().size = size
-    local drawn = DrawnSize()
-    Minimap:SetSize(drawn, drawn)
-    AnchorTopRight()
-
-    -- Without this nudge the map does not redraw after SetSize and keeps
-    -- showing the old section. Leatrix Plus does the same.
+-- Without this nudge the map does not redraw after SetSize and keeps
+-- showing the old section. Leatrix Plus does the same.
+local function RedrawMap()
     local zoom = Minimap:GetZoom()
     if zoom < 5 then
         Minimap:SetZoom(zoom + 1)
@@ -107,6 +101,16 @@ local function ApplySize(size)
         Minimap:SetZoom(zoom - 1)
     end
     Minimap:SetZoom(zoom)
+end
+
+local function ApplySize(size)
+    size = max(CONFIG.minSize, min(CONFIG.maxSize, floor(size + 0.5)))
+    ns.DB().size = size
+    local drawn = DrawnSize()
+    Minimap:SetSize(drawn, drawn)
+    AnchorTopRight()
+
+    RedrawMap()
 
     RefreshIcons()
     LayoutButtons()
@@ -698,6 +702,14 @@ local function DumpText()
         tostring(IsIndoors and IsIndoors()),
         tostring(HybridMinimap and HybridMinimap:IsShown() or false),
         tostring(C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player"))))
+    -- Read only, no zoom nudge: a redraw would repair the very state a report is about.
+    local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+    local pos = mapID and C_Map.GetPlayerMapPosition and C_Map.GetPlayerMapPosition(mapID, "player")
+    add(("  at %s / %s  %s  zoom cvars outdoor %s indoor %s  fade sees indoor map %s"):format(
+        tostring(GetZoneText and GetZoneText()), tostring(GetSubZoneText and GetSubZoneText()),
+        pos and ns.CoordsText(pos.x, pos.y) or "-",
+        tostring(GetCVar and GetCVar("minimapZoom")), tostring(GetCVar and GetCVar("minimapInsideZoom")),
+        tostring(ns.Fade.SeesIndoorMap())))
     add("")
     add(("%-26s %-9s %-14s %-16s %-12s %-16s %s"):format(
         "Frame", "Size", "Point", "to", "Offset", "State", "Parent"))
@@ -813,6 +825,7 @@ ns.api = {
     ApplyInfos     = function() ns.Infos.Apply(); ns.Infos.Update() end,
     ApplyLook      = function() return ApplyLook() end,
     ApplyBorder    = function() return ApplyBorder() end,
+    RedrawMap      = function() return RedrawMap() end,
     -- Tests: how far the look reaches out of the drawn map.
     Reach          = function() return Reach(ns.DB(), ns.ThemeArt.Art()) end,
     Config         = CONFIG,

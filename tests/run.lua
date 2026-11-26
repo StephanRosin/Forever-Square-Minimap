@@ -368,6 +368,33 @@ Fade.Set("combatAlpha", 0)
 check("out of combat", Fade.Target(false, false), 0.6)
 check("in combat", Fade.Target(true, false), 0)
 check("under the mouse: full", Fade.Target(true, true), 1)
+check("indoor map: half transparent becomes opaque", Fade.Target(false, false, true), 1)
+check("indoor map: 0 % is left alone", Fade.Target(true, false, true), 0)
+do
+    -- The client as seen in game: the map shows the zoom of the picture in use, SetZoom writes it.
+    local cvars, inside = { minimapZoom = "0", minimapInsideZoom = "0" }, false
+    local setZoom = Minimap.SetZoom
+    Minimap.SetZoom = function(self, z)
+        cvars[inside and "minimapInsideZoom" or "minimapZoom"] = tostring(z)
+        setZoom(self, z)
+    end
+    GetCVar = function(name) return cvars[name] end
+    local before = Minimap:GetZoom()
+    check("outdoor picture", Fade.IndoorMap(), false)
+    Minimap:SetZoom(2)
+    inside = true
+    setZoom(Minimap, 0)   -- walking in: the map shows the indoor zoom
+    check("indoor picture (Dun Morogh 2, Ironforge 0)", Fade.IndoorMap(), true)
+    cvars.minimapZoom = "0"
+    check("indoor picture, also with both zooms equal", Fade.IndoorMap(), true)
+    check("the zoom is as before", Minimap:GetZoom(), 0)
+    check("a fade set: the look is remembered for the dump", Fade.Set("alpha", 60) or Fade.SeesIndoorMap(), true)
+    check("and the map is opaque", Minimap:GetAlpha(), 1)
+    inside = false
+    Minimap.SetZoom, GetCVar = setZoom, nil
+    setZoom(Minimap, before)
+    Fade.Refresh()
+end
 Fade.Set("mouseover", false)
 check("mouse ignored when off", Fade.Target(true, true), 0)
 check("applied to the map", Minimap:GetAlpha(), 0.6)
